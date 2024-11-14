@@ -9,6 +9,7 @@ import Image from "next/image";
 import { Profile } from "./Profile";
 import { FaCartShopping } from "react-icons/fa6";
 import { RiShoppingCartLine } from "react-icons/ri";
+import { FaBars } from "react-icons/fa";
 
 export const Header = () => {
   const pathname = usePathname();
@@ -27,8 +28,13 @@ export const Header = () => {
 
   return (
     <div className="bg-white shadow-md sticky top-0 z-50">
-      <div className="container flex px-4 items-center justify-between mx-auto">
-        <div className="flex items-center space-x-8">
+      <div className="xl:container flex px-2 xl:px-4 items-center justify-between mx-auto">
+        {/* left hand side */}
+        <div className="flex items-center space-x-4 xl:space-x-8">
+          {/* mobile */}
+          <div className="lg:hidden">
+            <FaBars className="text-2xl text-neutral-dark font-bold" />
+          </div>
           <Link href={"/"} className="flex items-center space-x-3 py-4">
             <CiShoppingCart className="text-neutral-dark text-3xl" />
             <div className="font-bold">
@@ -38,7 +44,7 @@ export const Header = () => {
             </div>
           </Link>
           {/* navbar labels */}
-          <div className="flex items-center space-x-8 py-4">
+          <div className=" hidden lg:flex items-center space-x-4 xl:space-x-8 py-4">
             <Link
               href={"/"}
               className={`font-bold text-xl ${
@@ -66,7 +72,8 @@ export const Header = () => {
           </div>
         </div>
 
-        <div className="flex items-center space-x-6">
+        {/* second part- Right hand */}
+        <div className="hidden lg:flex items-center space-x-3 xl:space-x-6">
           {/* search */}
           <div className="relative">
             <input
@@ -139,6 +146,10 @@ export const Header = () => {
           <div className=" p-2 rounded-full cursor-pointer border border-neutral-dark">
             <RiShoppingCartLine className="text-2xl text-neutral-dark font-bold" />
           </div>
+        </div>
+        {/* Mobile right hand */}
+        <div className="lg:hidden">
+          <CiSearch className="text-2xl text-neutral-dark font-bold" />
         </div>
       </div>
     </div>

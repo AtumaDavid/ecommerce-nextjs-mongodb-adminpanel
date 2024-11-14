@@ -331,8 +331,8 @@ export const MenuTabs = () => {
           </button>
         ))}
       </nav>
-      <div className="flex justify-between py-3 w-full">
-        <div className="w-1/2">
+      <div className="flex py-3 w-full ">
+        <div className="w-1/4 flex ">
           <Image
             src={tabData[activeTab].image}
             alt={`${activeTab} category`}
@@ -341,7 +341,7 @@ export const MenuTabs = () => {
             width={200}
           />
         </div>
-        <div className="flex w-1/2 space-x-8">
+        <div className="flex w-full px-5 space-x-8  ">
           {renderCategoryLinks(
             "Shoes",
             Array.from(tabData[activeTab].shoes),
