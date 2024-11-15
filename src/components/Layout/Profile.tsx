@@ -24,7 +24,7 @@ type ProfileProps = {
   user: User;
 };
 
-export const Profile = ({ user }: ProfileProps) => {
+export default function Profile({ user }: ProfileProps) {
   const menuItems: MenuItems[] = [
     {
       icon: <FaLock className="mr-2" />,
@@ -87,4 +87,4 @@ export const Profile = ({ user }: ProfileProps) => {
       </div>
     </div>
   );
-};
+}

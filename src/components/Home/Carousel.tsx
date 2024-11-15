@@ -4,7 +4,7 @@ import "slick-carousel/slick/slick-theme.css";
 import Slider from "react-slick";
 import Image from "next/image";
 
-export const Carousel = () => {
+export default function Carousel() {
   const settings = {
     dots: true,
     infinite: true,
@@ -40,4 +40,4 @@ export const Carousel = () => {
       </Slider>
     </div>
   );
-};
+}

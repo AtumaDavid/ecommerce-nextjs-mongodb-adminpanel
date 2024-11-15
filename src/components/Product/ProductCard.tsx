@@ -13,7 +13,7 @@ interface ProductCardProps {
   data: Product[];
   isWishListed?: boolean;
 }
-export const ProductCard = ({ data, isWishListed }: ProductCardProps) => {
+export default function ProductCard({ data, isWishListed }: ProductCardProps) {
   return (
     <div className="grid sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
       {data?.map((item, index) => (
@@ -69,4 +69,4 @@ export const ProductCard = ({ data, isWishListed }: ProductCardProps) => {
       ))}
     </div>
   );
-};
+}

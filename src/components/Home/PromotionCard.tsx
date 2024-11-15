@@ -2,7 +2,7 @@
 import Image from "next/image";
 import React, { useState } from "react";
 
-export const PromotionCard = () => {
+export default function PromotionCard() {
   const [promotions, setPromotions] = useState([
     { image: "/winter_exclusive_for_man-cover.png", alt: "promotion1" },
     { image: "/winter_exclusive_for_woman-cover.png", alt: "promotion2" },
@@ -27,4 +27,4 @@ export const PromotionCard = () => {
       </div>
     </div>
   );
-};
+}

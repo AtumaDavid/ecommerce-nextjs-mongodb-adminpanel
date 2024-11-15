@@ -4,28 +4,16 @@ import { usePathname } from "next/navigation";
 import React, { useState } from "react";
 import { CiHeart, CiSearch, CiShoppingCart, CiUser } from "react-icons/ci";
 import { IoIosArrowDropdown } from "react-icons/io";
-import { MenuTabs } from "./MenuTabs";
 import Image from "next/image";
-import { Profile } from "./Profile";
+import Profile from "./Profile";
 import { RiShoppingCartLine } from "react-icons/ri";
 import { FaBars } from "react-icons/fa";
+import MenuTabs from "./MenuTabs";
 
-export const Header = () => {
+export default function Header() {
   const pathname = usePathname();
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   console.log(setIsLoggedIn);
-
-  //   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
-  //   // Toggle dropdown
-  //   const toggleDropdown = () => {
-  //     setIsDropdownOpen(!isDropdownOpen);
-  //   };
-
-  //   // Close dropdown when clicking outside
-  //   const closeDropdown = () => {
-  //     setIsDropdownOpen(false);
-  //   };
 
   return (
     <div className="bg-white shadow-md sticky top-0 z-50">
@@ -155,95 +143,4 @@ export const Header = () => {
       </div>
     </div>
   );
-};
-
-// "use client";
-
-// import Link from "next/link";
-// import { usePathname } from "next/navigation";
-// import React, { useState } from "react";
-// import { CiShoppingCart } from "react-icons/ci";
-// import { IoIosArrowDropdown } from "react-icons/io";
-// import { MenuTabs } from "./MenuTabs";
-
-// export const Header = () => {
-//   const pathname = usePathname();
-//   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
-//   // Toggle dropdown
-//   const toggleDropdown = () => {
-//     setIsDropdownOpen(!isDropdownOpen);
-//   };
-
-//   // Close dropdown when clicking outside
-//   const closeDropdown = () => {
-//     setIsDropdownOpen(false);
-//   };
-
-//   return (
-//     <header className="fixed top-0 w-full bg-white z-50">
-//       <div className="flex items-center justify-between px-8 py-4 border-b">
-//         {/* Left Section: Logo, Home, Categories */}
-//         <div className="flex items-center space-x-8">
-//           {/* Logo */}
-//           <Link href="/" className="text-2xl font-bold">
-//             SHOPY
-//           </Link>
-
-//           {/* Navigation */}
-//           <nav className="flex items-center space-x-8">
-//             <Link
-//               href="/"
-//               className={`${
-//                 pathname === "/" ? "text-orange-500" : "text-black"
-//               }`}
-//             >
-//               Home
-//             </Link>
-
-//             {/* Categories Dropdown */}
-//             <div className="relative">
-//               <button
-//                 onClick={toggleDropdown}
-//                 className="flex items-center space-x-1 focus:outline-none"
-//               >
-//                 <span
-//                   className={`${
-//                     pathname.startsWith("/products")
-//                       ? "text-orange-500"
-//                       : "text-black"
-//                   }`}
-//                 >
-//                   Categories
-//                 </span>
-//                 <IoIosArrowDropdown
-//                   className={`transition-transform ${
-//                     isDropdownOpen ? "rotate-180" : ""
-//                   }`}
-//                 />
-//               </button>
-
-//               {/* Dropdown Content */}
-//               {isDropdownOpen && (
-//                 <>
-//                   {/* Overlay to handle clicks outside */}
-//                   <div className="fixed inset-0 z-40" onClick={closeDropdown} />
-
-//                   {/* Dropdown Menu */}
-//                   <div className="absolute left-0 w-screen bg-white shadow-lg z-50 border-t">
-//                     <MenuTabs onNavigate={closeDropdown} />
-//                   </div>
-//                 </>
-//               )}
-//             </div>
-//           </nav>
-//         </div>
-
-//         {/* Right Section: Cart Icon */}
-//         <Link href="/cart" className="text-2xl">
-//           <CiShoppingCart />
-//         </Link>
-//       </div>
-//     </header>
-//   );
-// };
+}

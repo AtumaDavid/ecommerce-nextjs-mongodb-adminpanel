@@ -5,7 +5,7 @@ import Link from "next/link";
 import { CategoriesData } from "@/app/data/categories";
 import { formatProductUrl } from "@/utils/urlFormatter";
 
-export const CategoryCarousel = () => {
+export default function CategoryCarousel() {
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 my-8 sm:my-12 text-center ">
       <h3 className="text-3xl sm:text-4xl font-semibold mb-8">
@@ -65,4 +65,4 @@ export const CategoryCarousel = () => {
       </div>
     </div>
   );
-};
+}
