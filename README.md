@@ -1,1 +1,2 @@
 - React slick (carousel) === [React Slick Site](https://react-slick.neostack.com/)
+- npm i yup formik
