@@ -7,13 +7,14 @@ import { IoIosArrowDropdown } from "react-icons/io";
 import { MenuTabs } from "./MenuTabs";
 import Image from "next/image";
 import { Profile } from "./Profile";
-import { FaCartShopping } from "react-icons/fa6";
 import { RiShoppingCartLine } from "react-icons/ri";
 import { FaBars } from "react-icons/fa";
 
 export const Header = () => {
   const pathname = usePathname();
   const [isLoggedIn, setIsLoggedIn] = useState(true);
+  console.log(setIsLoggedIn);
+
   //   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   //   // Toggle dropdown
