@@ -30,11 +30,11 @@ export const Header = () => {
     <div className="bg-white shadow-md sticky top-0 z-50">
       <div className="xl:container flex px-2 xl:px-4 items-center justify-between mx-auto">
         {/* left hand side */}
+        {/* mobile */}
+        <div className="lg:hidden block">
+          <FaBars className="text-2xl text-neutral-dark font-bold" />
+        </div>
         <div className="flex items-center space-x-4 xl:space-x-8">
-          {/* mobile */}
-          <div className="lg:hidden">
-            <FaBars className="text-2xl text-neutral-dark font-bold" />
-          </div>
           <Link href={"/"} className="flex items-center space-x-3 py-4">
             <CiShoppingCart className="text-neutral-dark text-3xl" />
             <div className="font-bold">

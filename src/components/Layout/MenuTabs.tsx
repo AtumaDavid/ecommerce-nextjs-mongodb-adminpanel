@@ -234,45 +234,48 @@
 //   );
 // };
 
+import { CategoriesData } from "@/app/data/categories";
+import { formatProductUrl } from "@/utils/urlFormatter";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import React from "react";
 
-type TabName = "Men" | "Women" | "Juniors";
+// type TabName = "Men" | "Women" | "Juniors";
 
-const tabData = {
-  Men: {
-    image: "/men-cover.png",
-    clothing: [
-      "Hoodies & Sweatshirts",
-      "Jackets & Vests",
-      "Pants & Tights",
-      "Shorts",
-      "Tops & T-shirts",
-    ],
-    shoes: ["Basket Ball", "Running", "Sandals & Slides", "Sneakers", "Soccer"],
-    accessories: ["Bags & Backpacks", "Hats & Beanies", "Socks", "Underwear"],
-  },
-  Women: {
-    image: "/women-cover.png",
-    clothing: [
-      "Dresses & Skirts",
-      "Hoodies & Sweatshirts",
-      "Pants",
-      "Tights & Leggings",
-      "Tops & T-shirts",
-    ],
-    shoes: ["Running", "Sneakers", "Training & Gym"],
-    accessories: ["Bags & Backpacks", "Hats", "Socks"],
-  },
-  Juniors: {
-    image: "/juniors-cover.png",
-    clothing: ["Hoodies & Sweatshirts", "Shorts", "Tops & T-shirts"],
-    shoes: ["Basket Ball", "Running", "Sneakers"],
-    accessories: ["Bags & Backpacks", "Hats"],
-  },
-} as const;
+type TabName = keyof typeof CategoriesData;
+// const tabData = {
+//   Men: {
+//     image: "/men-cover.png",
+//     clothing: [
+//       "Hoodies & Sweatshirts",
+//       "Jackets & Vests",
+//       "Pants & Tights",
+//       "Shorts",
+//       "Tops & T-shirts",
+//     ],
+//     shoes: ["Basket Ball", "Running", "Sandals & Slides", "Sneakers", "Soccer"],
+//     accessories: ["Bags & Backpacks", "Hats & Beanies", "Socks", "Underwear"],
+//   },
+//   Women: {
+//     image: "/women-cover.png",
+//     clothing: [
+//       "Dresses & Skirts",
+//       "Hoodies & Sweatshirts",
+//       "Pants",
+//       "Tights & Leggings",
+//       "Tops & T-shirts",
+//     ],
+//     shoes: ["Running", "Sneakers", "Training & Gym"],
+//     accessories: ["Bags & Backpacks", "Hats", "Socks"],
+//   },
+//   Juniors: {
+//     image: "/juniors-cover.png",
+//     clothing: ["Hoodies & Sweatshirts", "Shorts", "Tops & T-shirts"],
+//     shoes: ["Basket Ball", "Running", "Sneakers"],
+//     accessories: ["Bags & Backpacks", "Hats"],
+//   },
+// } as const;
 
 const getTabName = (tab: string | null): TabName => {
   const formatted =
@@ -283,20 +286,24 @@ const getTabName = (tab: string | null): TabName => {
     : "Men";
 };
 
-const formatCategoryUrl = (category: string, tab: TabName) => {
-  return `/products?category=${encodeURIComponent(
-    category.toLowerCase()
-  )}&tab=${tab.toLowerCase()}`;
-};
+// const formatCategoryUrl = (
+//   category: string,
+//   subcategory: string,
+//   tab: TabName
+// ) => {
+//   return `/products?category=${encodeURIComponent(
+//     category.toLowerCase()
+//   )}&subcategory=${subcategory}&gender=${tab.toLowerCase()}`;
+// };
 
 export const MenuTabs = () => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const activeTab = getTabName(searchParams.get("tab"));
+  const activeTab = getTabName(searchParams.get("gender"));
 
   const updateTab = (tab: TabName) => {
-    router.push(`${pathname}?tab=${tab.toLowerCase()}`);
+    router.push(`${pathname}?gender=${tab.toLowerCase()}`);
   };
 
   const renderCategoryLinks = (
@@ -309,7 +316,16 @@ export const MenuTabs = () => {
       <ul className="space-y-2">
         {items.map((item) => (
           <li key={item} className="hover:underline">
-            <Link href={formatCategoryUrl(item, tab)}>{item}</Link>
+            {/* <Link href={formatCategoryUrl(title, item, tab)}>{item}</Link> */}
+            <Link
+              href={formatProductUrl({
+                category: title,
+                subcategory: item,
+                gender: tab,
+              })}
+            >
+              {item}
+            </Link>
           </li>
         ))}
       </ul>
@@ -331,10 +347,10 @@ export const MenuTabs = () => {
           </button>
         ))}
       </nav>
-      <div className="flex py-3 w-full ">
+      <div className="flex p-3 w-full ">
         <div className="w-1/4 flex ">
           <Image
-            src={tabData[activeTab].image}
+            src={CategoriesData[activeTab].image}
             alt={`${activeTab} category`}
             className="rounded-lg object-cover"
             height={300}
@@ -344,18 +360,18 @@ export const MenuTabs = () => {
         <div className="flex w-full px-5 space-x-8  ">
           {renderCategoryLinks(
             "Shoes",
-            Array.from(tabData[activeTab].shoes),
+            Array.from(CategoriesData[activeTab].shoes),
             activeTab
           )}
           {renderCategoryLinks(
             "Clothing",
-            Array.from(tabData[activeTab].clothing),
+            Array.from(CategoriesData[activeTab].clothing),
             activeTab
           )}
 
           {renderCategoryLinks(
             "Accessories",
-            Array.from(tabData[activeTab].accessories),
+            Array.from(CategoriesData[activeTab].accessories),
             activeTab
           )}
         </div>

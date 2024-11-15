@@ -1,1 +1,1 @@
-- React slick
+- React slick (carousel) === [React Slick Site](https://react-slick.neostack.com/)

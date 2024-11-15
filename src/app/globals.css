@@ -1,21 +1,34 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-/* 
-:root {
+
+/* :root {
   --background: #ffffff;
   --foreground: #171717;
-}
-
+} */
+/* 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
   }
-}
+} */
 
-body {
+/* body {
   color: var(--foreground);
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 } */
+
+.banner .slick-dots {
+  bottom: 10px !important;
+}
+
+.banner .slick-next {
+  right: 15px !important;
+}
+
+.banner .slick-prev {
+  left: 15px !important;
+  z-index: 100;
+}
