@@ -12,7 +12,7 @@ import MenuTabs from "./MenuTabs";
 
 export default function Header() {
   const pathname = usePathname();
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   console.log(setIsLoggedIn);
 
   return (
@@ -107,14 +107,14 @@ export default function Header() {
               {!isLoggedIn ? (
                 <div className=" flex flex-col space-x-3 items-center justify-center py-3">
                   <Link
-                    href={"/register"}
+                    href={"/registration"}
                     className=" py-2 px-3 block bg-neutral-dark rounded-full text-neutral-light text-xl w-full"
                   >
                     Register your account
                   </Link>
                   <p className="py-1 text-center">OR</p>
                   <Link
-                    href={"/register"}
+                    href={"/signin"}
                     className="py-2 px-3 block bg-neutral-light rounded-full text-neutral-dark text-xl w-full"
                   >
                     Login to your account
