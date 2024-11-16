@@ -3,8 +3,9 @@ import { formatProductUrl } from "@/utils/urlFormatter";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import React from "react";
+import React, { Suspense } from "react";
 
+// Keep your helper functions and types outside the component
 type TabName = keyof typeof CategoriesData;
 
 const getTabName = (tab: string | null): TabName => {
@@ -16,25 +17,8 @@ const getTabName = (tab: string | null): TabName => {
     : "Men";
 };
 
-// const formatCategoryUrl = (
-//   category: string,
-//   subcategory: string,
-//   tab: TabName
-// ) => {
-//   return `/products?category=${encodeURIComponent(
-//     category.toLowerCase()
-//   )}&subcategory=${subcategory}&gender=${tab.toLowerCase()}`;
-// };
-
-// export default function MenuTabs() {
-//   return (
-//     <div>
-
-//     </div>
-//   )
-// }
-
-export default function MenuTabs() {
+// Create a separate component for the menu content
+function MenuContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -54,7 +38,6 @@ export default function MenuTabs() {
       <ul className="space-y-2">
         {items.map((item) => (
           <li key={item} className="hover:underline">
-            {/* <Link href={formatCategoryUrl(title, item, tab)}>{item}</Link> */}
             <Link
               href={formatProductUrl({
                 category: title,
@@ -106,7 +89,6 @@ export default function MenuTabs() {
             Array.from(CategoriesData[activeTab].clothing),
             activeTab
           )}
-
           {renderCategoryLinks(
             "Accessories",
             Array.from(CategoriesData[activeTab].accessories),
@@ -115,5 +97,20 @@ export default function MenuTabs() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Main component wrapped with Suspense
+export default function MenuTabs() {
+  return (
+    <Suspense
+      fallback={
+        <div className="w-full h-full flex items-center justify-center">
+          Loading...
+        </div>
+      }
+    >
+      <MenuContent />
+    </Suspense>
   );
 }
