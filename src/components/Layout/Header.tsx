@@ -12,14 +12,17 @@ import MenuTabs from "./MenuTabs";
 
 export default function Header() {
   const pathname = usePathname();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  console.log(setIsLoggedIn);
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+  const handleProfileEnter = () => setIsProfileOpen(true);
+  const handleProfileLeave = () => setIsProfileOpen(false);
 
   return (
     <div className="bg-white shadow-md sticky top-0 z-50">
       <div className="xl:container flex px-2 xl:px-4 items-center justify-between mx-auto">
-        {/* left hand side */}
-        {/* mobile */}
+        {/* Left-hand side */}
+        {/* Mobile */}
         <div className="lg:hidden block">
           <FaBars className="text-2xl text-neutral-dark font-bold" />
         </div>
@@ -32,8 +35,8 @@ export default function Header() {
               </span>
             </div>
           </Link>
-          {/* navbar labels */}
-          <div className=" hidden lg:flex items-center space-x-4 xl:space-x-8 py-4">
+          {/* Navbar labels */}
+          <div className="hidden lg:flex items-center space-x-4 xl:space-x-8 py-4">
             <Link
               href={"/"}
               className={`font-bold text-xl ${
@@ -61,9 +64,9 @@ export default function Header() {
           </div>
         </div>
 
-        {/* second part- Right hand */}
+        {/* Right-hand side */}
         <div className="hidden lg:flex items-center space-x-3 xl:space-x-6">
-          {/* search */}
+          {/* Search */}
           <div className="relative">
             <input
               type="text"
@@ -72,7 +75,7 @@ export default function Header() {
             />
             <CiSearch className="text-2xl text-neutral-dark font-bold absolute left-3 top-1/2 transform -translate-y-1/2" />
           </div>
-          {/* language */}
+          {/* Language */}
           <div className="relative group me-4 py-4">
             <div className="flex items-center space-x-2 cursor-pointer">
               <Image
@@ -82,61 +85,65 @@ export default function Header() {
                 width={20}
                 height={5}
               />
-              {/* <img src="" alt="flag" className="h-5" /> */}
               <span>English</span>
               <IoIosArrowDropdown className="text-xl ms-3" />
             </div>
             <div className="absolute top-14 left-[1px] w-48 p-3 bg-white border rounded shadow-lg hidden group-hover:block">
               <button className="flex items-center space-x-8 gap-3">
                 <Image src={"/english.png"} alt="flag" width={20} height={5} />
-                {/* <img src="" alt="flag" className="h-5" /> */}
                 English
               </button>
             </div>
           </div>
-          {/* wishlist */}
+          {/* Wishlist */}
           <Link href={"/wishlist"}>
             <CiHeart className="text-2xl text-neutral-dark font-bold" />
           </Link>
-          {/* user profile */}
-          <div className="relative group me-4 py-4">
+          {/* User profile */}
+          <div
+            className="relative me-4 py-4"
+            onMouseEnter={handleProfileEnter}
+            onMouseLeave={handleProfileLeave}
+          >
             <div className="flex items-center space-x-2 cursor-pointer">
               <CiUser className="text-2xl text-neutral-dark font-bold" />
             </div>
-            <div className="absolute top-14 right-[-10px] w-64 p-3 bg-white rounded-md hidden shadow-md group-hover:block">
-              {!isLoggedIn ? (
-                <div className=" flex flex-col space-x-3 items-center justify-center py-3">
-                  <Link
-                    href={"/registration"}
-                    className=" py-2 px-3 block bg-neutral-dark rounded-full text-neutral-light text-xl w-full"
-                  >
-                    Register your account
-                  </Link>
-                  <p className="py-1 text-center">OR</p>
-                  <Link
-                    href={"/signin"}
-                    className="py-2 px-3 block bg-neutral-light rounded-full text-neutral-dark text-xl w-full"
-                  >
-                    Login to your account
-                  </Link>
-                </div>
-              ) : (
-                <Profile
-                  user={{
-                    name: "David",
-                    phone: "123456789",
-                    avatarUrl: "/profile.png",
-                  }}
-                />
-              )}
-            </div>
+            {isProfileOpen && (
+              <div className="absolute top-14 right-[-10px] w-64 p-3 bg-white rounded-md shadow-md">
+                {!isLoggedIn ? (
+                  <div className="flex flex-col items-center py-3">
+                    <Link
+                      href={"/registration"}
+                      className="py-2 px-3 block bg-neutral-dark rounded-full text-neutral-light text-xl w-full text-center"
+                    >
+                      Register your account
+                    </Link>
+                    <p className="py-1 text-center">OR</p>
+                    <Link
+                      href={"/signin"}
+                      className="py-2 px-3 block bg-neutral-light rounded-full text-neutral-dark text-xl w-full text-center"
+                    >
+                      Login to your account
+                    </Link>
+                  </div>
+                ) : (
+                  <Profile
+                    user={{
+                      name: "David",
+                      phone: "123456789",
+                      avatarUrl: "/profile.png",
+                    }}
+                  />
+                )}
+              </div>
+            )}
           </div>
-          {/* cart */}
-          <div className=" p-2 rounded-full cursor-pointer border border-neutral-dark">
+          {/* Cart */}
+          <div className="p-2 rounded-full cursor-pointer border border-neutral-dark">
             <RiShoppingCartLine className="text-2xl text-neutral-dark font-bold" />
           </div>
         </div>
-        {/* Mobile right hand */}
+        {/* Mobile right-hand side */}
         <div className="lg:hidden">
           <CiSearch className="text-2xl text-neutral-dark font-bold" />
         </div>
