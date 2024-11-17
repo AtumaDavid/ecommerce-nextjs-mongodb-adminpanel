@@ -1,6 +1,11 @@
 import React from "react";
 
-const DeleteModal = ({ onClose, onConfirm }: any) => {
+type DeleteModalProps = {
+  onClose: () => void;
+  onConfirm: () => void;
+};
+
+const DeleteModal: React.FC<DeleteModalProps> = ({ onClose, onConfirm }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
       <div className="bg-white rounded-lg w-full max-w-md p-6">

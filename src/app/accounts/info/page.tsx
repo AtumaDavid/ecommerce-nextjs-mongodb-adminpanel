@@ -1,7 +1,7 @@
 "use client";
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 
-export default function page() {
+export default function AccountInfo() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = () => {
@@ -13,7 +13,7 @@ export default function page() {
     }
   };
 
-  const [fileName, setFileName] = React.useState("No file chosen");
+  const [fileName, setFileName] = useState("No file chosen");
 
   return (
     <div className="p-6 w-full max-w-4xl">

@@ -4,6 +4,17 @@ import AddressList from "./AddressList";
 import AddressFormModal from "./AddressFormModal";
 import DeleteModal from "./DeleteModal";
 
+type Address = {
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  area: string;
+  city: string;
+  country: string;
+  zipCode: string;
+};
+
 const AddressManagement = () => {
   const [addresses, setAddresses] = useState([
     {
@@ -64,7 +75,7 @@ const AddressManagement = () => {
     }
   };
 
-  const handleSave = (newAddress: any) => {
+  const handleSave = (newAddress: Address) => {
     if (formType === "edit" && selectedIndex !== null) {
       const updatedAddresses = [...addresses];
       updatedAddresses[selectedIndex] = newAddress;

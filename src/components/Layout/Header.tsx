@@ -14,6 +14,16 @@ export default function Header() {
   const pathname = usePathname();
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  console.log(setIsLoggedIn);
+  // const handleLogin = () => {
+  //   // Perform login logic here
+  //   setIsLoggedIn(true); // Set to true on successful login
+  // };
+
+  // const handleLogout = () => {
+  //   // Perform logout logic here
+  //   setIsLoggedIn(false); // Set to false on logout
+  // };
 
   const handleProfileEnter = () => setIsProfileOpen(true);
   const handleProfileLeave = () => setIsProfileOpen(false);
