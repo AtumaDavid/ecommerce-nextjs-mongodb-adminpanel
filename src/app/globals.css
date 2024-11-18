@@ -32,3 +32,9 @@
   left: 15px !important;
   z-index: 100;
 }
+
+.scroll {
+  scrollbar-width: thin;
+  scroll-behavior: smooth;
+  scrollbar-color: #037171 white;
+}
