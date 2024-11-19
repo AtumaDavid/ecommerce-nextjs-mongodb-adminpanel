@@ -21,33 +21,45 @@ import React, { useState, useMemo } from "react";
 const ITEMS_PER_PAGE = 10;
 
 // Move dummyProducts to a separate data file in a real application
-const dummyProducts: Product[] = [
-  {
-    id: 1,
-    name: "Product 1",
-    image: "https://via.placeholder.com/80",
-    category: "Electronics",
-    buyingPrice: 10000,
-    sellingPrice: 15000,
-    status: "Active",
-    description: "Description for Product 1",
-  },
-  {
-    id: 2,
-    name: "Product 2",
-    image: "https://via.placeholder.com/80",
-    category: "Fashion",
-    buyingPrice: 20000,
-    sellingPrice: 25000,
-    status: "Inactive",
-    description: "Description for Product 2",
-  },
-];
+// const dummyProducts: Product[] = [
+//   {
+//     id: 1,
+//     name: "Product 1",
+//     image: "https://via.placeholder.com/80",
+//     category: "Electronics",
+//     buyingPrice: 10000,
+//     sellingPrice: 15000,
+//     status: "Active",
+//     description: "Description for Product 1",
+//   },
+//   {
+//     id: 2,
+//     name: "Product 2",
+//     image: "https://via.placeholder.com/80",
+//     category: "Fashion",
+//     buyingPrice: 20000,
+//     sellingPrice: 25000,
+//     status: "Inactive",
+//     description: "Description for Product 2",
+//   },
+// ];
 //   buyingPrice: Math.floor(Math.random() * 500000) + 10000,
 //   sellingPrice: Math.floor(Math.random() * 1000000) + 50000,
 //   status: Math.random() > 0.2 ? "Active" : "Inactive",
 //   description: `Description for Product ${index + 1}`,
 // }));
+const dummyProducts: Product[] = Array.from({ length: 40 }, (_, index) => ({
+  id: index + 1,
+  name: `Product ${index + 1}`,
+  image: `https://via.placeholder.com/80`,
+  category: ["Electronics", "Fashion", "Home & Kitchen", "Books"][
+    Math.floor(Math.random() * 4)
+  ],
+  buyingPrice: Math.floor(Math.random() * 500000) + 10000,
+  sellingPrice: Math.floor(Math.random() * 1000000) + 50000,
+  status: Math.random() > 0.2 ? "Active" : "Inactive",
+  description: `Description for Product ${index + 1}`,
+}));
 
 const DashboardProduct = () => {
   const [currentPage, setCurrentPage] = useState(1);

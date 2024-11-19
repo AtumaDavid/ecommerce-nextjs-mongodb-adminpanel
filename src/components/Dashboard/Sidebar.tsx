@@ -35,7 +35,10 @@ export default function Sidebar({
               ? "bg-primary text-white font-semibold"
               : ""
           } flex items-center space-x-2 p-2 rounded-md cursor-pointer`}
-          onClick={() => setActiveLink("Dashboard")}
+          onClick={() => {
+            setActiveLink("Dashboard");
+            setOpenSidebar(true);
+          }}
         >
           <FaThLarge />
           <span className={`${!openSidebar && "hidden"} md:inline`}>
