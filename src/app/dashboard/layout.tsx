@@ -1,24 +1,40 @@
 "use client";
 import Header from "@/components/Dashboard/Header";
 import Sidebar from "@/components/Dashboard/Sidebar";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
+//Auto-close the sidebar on small screens//   // Auto-close the sidebar on small screens
+
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [openSidebar, setOpenSidebar] = useState(true);
+
+  //Auto-close the sidebar on small screens//
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setOpenSidebar(false);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    handleResize(); // Check on initial render
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   return (
     <div className="overflow-hidden h-screen">
       <Header openSidebar={openSidebar} setOpenSidebar={setOpenSidebar} />
       <div className="flex">
         <aside
-          className={`w-64 relative shadow-md transform transition-all ease-in-out duration-300 ${
+          className={`w-64 h-full relative shadow-md transform transition-all ease-in-out duration-300 ${
             openSidebar ? "left-0" : "left-[-16rem]"
           }`}
         >
-          <Sidebar openSidebar={openSidebar} />
+          <Sidebar openSidebar={openSidebar} setOpenSidebar={setOpenSidebar} />
         </aside>
         <main
           className={`p-4 bg-[#f7f7fc], overflow-y-scroll h-[90vh] transform transition-all ease-in-out duration-300 ${

@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import { navItems } from "./Sidebar";
 import NavigationItem from "./NavigationItem";

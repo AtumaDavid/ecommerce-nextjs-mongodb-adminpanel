@@ -11,6 +11,7 @@
   "dependencies": {
     "chart.js": "^4.4.6",
     "formik": "^2.4.6",
+    "jodit-react": "^4.1.2",
     "multi-range-slider-react": "^2.0.7",
     "next": "15.0.3",
     "react": "^18.2.0",
