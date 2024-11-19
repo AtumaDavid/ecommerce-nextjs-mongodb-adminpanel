@@ -27,33 +27,31 @@ const OrderSummaryChart: React.FC = () => {
   const [toDate, setToDate] = useState<Date | null>(null);
 
   useEffect(() => {
-    fetchOrderData();
-  }, [fromDate, toDate]);
+    const initialData = generateFixedData(); // Changed to fixed data generation
+    setOrderData(initialData);
+  }, []);
 
-  const fetchOrderData = async () => {
-    const generateRandomData = (): OrderData => {
-      const total = Math.floor(Math.random() * 200) + 100;
-      const delivered = Math.floor(total * 0.6);
-      const canceled = Math.floor(total * 0.25);
-      const rejected = total - delivered - canceled;
+  const generateFixedData = (): OrderData => {
+    const total = 150; // Fixed total orders
+    const delivered = 90; // Fixed delivered orders
+    const canceled = 30; // Fixed canceled orders
+    const rejected = total - delivered - canceled; // Calculate rejected orders
 
-      const generateOrders = (count: number): Order[] =>
-        Array.from({ length: count }, () => ({
-          id: `ORD-${Math.random().toString(36).substr(2, 9)}`,
-          date: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
-          amount: Math.floor(Math.random() * 1000) + 100,
-        }));
+    const fixedDate = new Date("2023-10-01"); // Fixed date for order generation
 
-      return {
-        total,
-        delivered: { count: delivered, data: generateOrders(delivered) },
-        canceled: { count: canceled, data: generateOrders(canceled) },
-        rejected: { count: rejected, data: generateOrders(rejected) },
-      };
+    const generateOrders = (count: number): Order[] =>
+      Array.from({ length: count }, (_, index) => ({
+        id: `ORD-${index + 1}`, // Fixed ID generation
+        date: new Date(fixedDate.getTime() - index * 24 * 60 * 60 * 1000), // Use fixed date for the last few days
+        amount: 500, // Fixed amount for simplicity
+      }));
+
+    return {
+      total,
+      delivered: { count: delivered, data: generateOrders(delivered) },
+      canceled: { count: canceled, data: generateOrders(canceled) },
+      rejected: { count: rejected, data: generateOrders(rejected) },
     };
-
-    const data = generateRandomData();
-    setOrderData(data);
   };
 
   const calculatePercentage = (value: number): number => {
@@ -64,7 +62,7 @@ const OrderSummaryChart: React.FC = () => {
 
   const calculateStrokeValues = (count: number): number => {
     const totalCircumference = 440; // Full circle
-    return (count / orderData.total) * totalCircumference;
+    return (count / (orderData.total || 1)) * totalCircumference;
   };
 
   return (

@@ -1,3 +1,4 @@
+"use client";
 import ProductCard from "@/components/Product/ProductCard";
 import ProductFilter from "@/components/Product/ProductFilter";
 import React, { Suspense } from "react";

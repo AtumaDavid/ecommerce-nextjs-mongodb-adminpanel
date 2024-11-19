@@ -1,11 +1,16 @@
 import Link from "next/link";
 import React, { useState } from "react";
-import { FaBox, FaThLarge } from "react-icons/fa";
+import { AiOutlineProduct } from "react-icons/ai";
+import { FaThLarge } from "react-icons/fa";
 
 interface DashboardSidebarProps {
   openSidebar: boolean;
+  setOpenSidebar: (open: boolean) => void;
 }
-export default function Sidebar({ openSidebar }: DashboardSidebarProps) {
+export default function Sidebar({
+  openSidebar,
+  setOpenSidebar,
+}: DashboardSidebarProps) {
   const [activeLink, setActiveLink] = useState<string>("Dashboard");
 
   const sideBarSections = [
@@ -13,7 +18,7 @@ export default function Sidebar({ openSidebar }: DashboardSidebarProps) {
       title: "Product & Stocks",
       items: [
         {
-          icon: <FaBox />,
+          icon: <AiOutlineProduct />,
           label: "Products",
           link: "/dashboard/products",
         },
@@ -30,6 +35,7 @@ export default function Sidebar({ openSidebar }: DashboardSidebarProps) {
               ? "bg-primary text-white font-semibold"
               : ""
           } flex items-center space-x-2 p-2 rounded-md cursor-pointer`}
+          onClick={() => setActiveLink("Dashboard")}
         >
           <FaThLarge />
           <span className={`${!openSidebar && "hidden"} md:inline`}>
