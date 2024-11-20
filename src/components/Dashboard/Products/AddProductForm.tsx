@@ -1,11 +1,11 @@
-"use client";
-import React from "react";
-import { useFormik } from "formik";
-import * as Yup from "yup";
-import { FaSave, FaTimes } from "react-icons/fa";
+import React, { useState } from "react";
+import InputField from "./ProductsForm/InputField";
+import SelectField from "./ProductsForm/SelectField";
+import RadioGroup from "./ProductsForm/RadioGroup";
+import TagInput from "./ProductsForm/TagInput";
+import TextArea from "./ProductsForm/TextArea";
 
-// Define the interface for form values
-interface ProductFormValues {
+interface FormData {
   name: string;
   sku: string;
   category: string;
@@ -13,440 +13,439 @@ interface ProductFormValues {
   buyingPrice: string;
   sellingPrice: string;
   tax: string;
-  brand: string;
-  status: "active" | "inactive";
-  purchasable: "yes" | "no";
-  stockOut: "enable" | "disable";
-  refundable: "yes" | "no";
+  status: string;
+  canPurchasable: string;
+  showStockOut: string;
+  refundable: string;
   maxPurchaseQuantity: string;
   lowStockWarning: string;
   unit: string;
   weight?: string;
-  tags?: string;
-  description?: string;
+  tags: string[];
+  description: string;
 }
 
-// Define the interface for component props
-interface ProductFormProps {
-  onSubmit: (values: ProductFormValues) => void;
+type Gender = "men" | "women" | "juniors";
+
+interface AddProductFormProps {
+  onSubmit: (data: FormData) => void; // Ensure proper type definition
 }
 
-// Constants
-const VAT_OPTIONS = [
-  { value: "no-VAT", label: "No VAT" },
-  { value: "VAT-5", label: "VAT 5%" },
-  { value: "VAT-10", label: "VAT 10%" },
-  { value: "VAT-20", label: "VAT 20%" },
-] as const;
+interface Category {
+  category: string;
+  subcategories: string[];
+}
 
-const BARCODE_TYPES = [
-  { value: "UAN-13", label: "UAN-13" },
-  { value: "UPC-A", label: "UPC-A" },
-] as const;
-
-const CATEGORIES = [
-  { value: "electronics", label: "Electronics" },
-  { value: "clothing", label: "Clothing" },
-  { value: "food", label: "Food" },
-] as const;
-
-const generateSKU = (): string => {
-  return Math.floor(10000 + Math.random() * 90000).toString();
+const categories: Record<Gender, Category[]> = {
+  men: [
+    {
+      category: "Shoes",
+      subcategories: [
+        "Basket Ball",
+        "Running",
+        "Sandals & Slides",
+        "Sneakers",
+        "Soccer",
+      ],
+    },
+    {
+      category: "Clothing",
+      subcategories: [
+        "Hoodies & Sweatshirts",
+        "Jackets & Vests",
+        "Pants & Tights",
+        "Shorts",
+        "Tops & T-shirts",
+      ],
+    },
+    {
+      category: "Accessories",
+      subcategories: [
+        "Bags & Backpacks",
+        "Hats & Beanies",
+        "Socks",
+        "Underwear",
+      ],
+    },
+  ],
+  women: [
+    {
+      category: "Shoes",
+      subcategories: ["Running", "Sneakers", "Training & Gym"],
+    },
+    {
+      category: "Clothing",
+      subcategories: [
+        "Dresses & Skirts",
+        "Hoodies & Sweatshirts",
+        "Pants",
+        "Tights & Leggings",
+        "Tops & T-shirts",
+      ],
+    },
+    {
+      category: "Accessories",
+      subcategories: ["Bags & Backpacks", "Hats", "Socks"],
+    },
+  ],
+  juniors: [
+    {
+      category: "Shoes",
+      subcategories: ["Running", "Sneakers", "Training & Gym"],
+    },
+    {
+      category: "Clothing",
+      subcategories: [
+        "Dresses & Skirts",
+        "Hoodies & Sweatshirts",
+        "Pants",
+        "Tights & Leggings",
+        "Tops & T-shirts",
+      ],
+    },
+    {
+      category: "Accessories",
+      subcategories: ["Bags & Backpacks", "Hats", "Socks"],
+    },
+  ],
 };
 
-// Use the defined interfaces in the component
-const ProductForm: React.FC<ProductFormProps> = ({ onSubmit }) => {
-  const formik = useFormik<ProductFormValues>({
-    initialValues: {
-      name: "",
-      sku: generateSKU(),
-      category: "",
-      barcode: "",
-      buyingPrice: "",
-      sellingPrice: "",
-      tax: "no-VAT",
-      brand: "",
-      status: "active",
-      purchasable: "yes",
-      stockOut: "disable",
-      refundable: "no",
-      maxPurchaseQuantity: "",
-      lowStockWarning: "",
-      unit: "",
-      weight: "",
-      tags: "",
-      description: "",
-    },
-    validationSchema: Yup.object({
-      name: Yup.string().required("Name is required"),
-      sku: Yup.string().required("SKU is required"),
-      category: Yup.string().required("Category is required"),
-      barcode: Yup.string().required("Barcode type is required"),
-      buyingPrice: Yup.number().required("Buying Price is required").min(0),
-      sellingPrice: Yup.number().required("Selling Price is required").min(0),
-      refundable: Yup.string().required("Refundable option is required"),
-      maxPurchaseQuantity: Yup.number()
-        .required("Maximum Purchase Quantity is required")
-        .min(1),
-      lowStockWarning: Yup.number()
-        .required("Low Stock Quantity is required")
-        .min(0),
-    }),
-    onSubmit: (values) => {
-      onSubmit(values);
-      console.log("Form Submitted", values);
-    },
+const ProductForm: React.FC<AddProductFormProps> = ({ onSubmit }) => {
+  const [formData, setFormData] = useState<FormData>({
+    name: "",
+    sku: Math.floor(Math.random() * 100000).toString(),
+    category: "",
+    barcode: "",
+    buyingPrice: "",
+    sellingPrice: "",
+    tax: "No Vat",
+    status: "",
+    canPurchasable: "",
+    showStockOut: "",
+    refundable: "",
+    maxPurchaseQuantity: "",
+    lowStockWarning: "",
+    unit: "piece(pc)",
+    weight: "",
+    tags: [],
+    description: "",
   });
 
+  const [errors, setErrors] = useState<{ [key in keyof FormData]?: string }>(
+    {}
+  );
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [tagInput, setTagInput] = useState("");
+  const [selectedGender, setSelectedGender] = useState<Gender | "">("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>("");
+
+  // Function to handle gender change
+  const handleGenderChange = (gender: string) => {
+    if (gender === "men" || gender === "women" || gender === "juniors") {
+      setSelectedGender(gender as Gender);
+      setSelectedCategory(""); // Reset category when gender changes
+      setSelectedSubcategory(""); // Reset subcategory when gender changes
+    }
+  };
+
+  const categoryOptions = selectedGender
+    ? categories[selectedGender].map((cat) => ({
+        value: cat.category,
+        label: cat.category,
+      }))
+    : [];
+
+  // Function to handle category change
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
+    setSelectedSubcategory(""); // Reset subcategory when category changes
+  };
+
+  // const handleGenderChange = (gender: string) => {
+  //   if (gender === "men" || gender === "women" || gender === "juniors") {
+  //     setSelectedGender(gender as Gender);
+  //     setSelectedCategory(""); // Reset category when gender changes
+  //     setSelectedSubcategory(""); // Reset subcategory when gender changes
+  //   }
+  // };
+
+  const handleChange = (field: keyof FormData, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+
+    if (isSubmitted) {
+      setErrors((prevErrors) => {
+        const newErrors = { ...prevErrors };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors: { [key in keyof FormData]?: string } = {};
+    const requiredFields: (keyof FormData)[] = [
+      "name",
+      "sku",
+      "category",
+      "barcode",
+      "buyingPrice",
+      "sellingPrice",
+      "status",
+      "canPurchasable",
+      "showStockOut",
+      "refundable",
+      "maxPurchaseQuantity",
+      "lowStockWarning",
+    ];
+
+    requiredFields.forEach((field) => {
+      if (!formData[field]) {
+        newErrors[field] = "This field is required";
+      }
+    });
+
+    return newErrors;
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitted(true);
+
+    const newErrors = validateForm();
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length === 0) {
+      console.log("Form submitted:", formData);
+      onSubmit(formData); // Pass data to parent
+    }
+  };
+
+  const handleAddTag = (tag: string) => {
+    if (tag && formData.tags.length < 10) {
+      setFormData((prev) => ({
+        ...prev,
+        tags: [...prev.tags, tag],
+      }));
+      setTagInput("");
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      tags: prev.tags.filter((tag) => tag !== tagToRemove),
+    }));
+  };
+
   return (
-    <div className="p-4 sm:p-8 max-w-4xl mx-auto bg-white shadow-md rounded-md">
-      <form onSubmit={formik.handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {/* Name Field */}
-          <div>
-            <label htmlFor="name" className="block text-gray-600">
-              Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              {...formik.getFieldProps("name")}
-              id="name"
-              type="text"
-              className={`w-full mt-1 p-2 border rounded-md ${
-                formik.touched.name && formik.errors.name
-                  ? "border-red-500"
-                  : "border-gray-300"
-              }`}
-            />
-            {formik.touched.name && formik.errors.name && (
-              <p className="text-red-500 text-sm mt-1">{formik.errors.name}</p>
-            )}
-          </div>
+    <div className="p-4">
+      <form
+        className="grid grid-cols-1 sm:grid-cols-2 gap-6"
+        onSubmit={handleSubmit}
+      >
+        {/* NAME */}
+        <InputField
+          label="NAME"
+          value={formData.name}
+          onChange={(value) => handleChange("name", value)}
+          error={isSubmitted && errors.name ? errors.name : undefined}
+        />
+        {/* SKU */}
+        <InputField
+          label="SKU"
+          value={formData.sku}
+          onChange={(value) => handleChange("sku", value)}
+          error={isSubmitted && errors.sku ? errors.sku : undefined}
+        />
+        {/* CATEGORY */}
+        <RadioGroup
+          label="GENDER"
+          value={selectedGender}
+          onChange={handleGenderChange}
+          options={[
+            { value: "men", label: "Men" },
+            { value: "women", label: "Women" },
+            { value: "juniors", label: "Juniors" },
+          ]}
+        />
 
-          {/* SKU Field */}
-          <div>
-            <label htmlFor="sku" className="block text-gray-600">
-              SKU <span className="text-red-500">*</span>
-            </label>
-            <div className="flex">
-              <input
-                id="sku"
-                type="text"
-                readOnly
-                className="w-full mt-1 p-2 border rounded-l-md bg-gray-50"
-                value={formik.values.sku}
-              />
-              <button
-                type="button"
-                onClick={() => formik.setFieldValue("sku", generateSKU())}
-                className="mt-1 px-4 bg-gray-200 border border-l-0 rounded-r-md hover:bg-gray-300"
-              >
-                ↺
-              </button>
-            </div>
-          </div>
+        <SelectField
+          label="CATEGORY"
+          value={selectedCategory}
+          onChange={handleCategoryChange}
+          options={
+            selectedGender
+              ? categories[selectedGender].map((cat) => ({
+                  value: cat.category,
+                  label: cat.category,
+                }))
+              : []
+          }
+        />
 
-          {/* Category Dropdown */}
-          <div>
-            <label htmlFor="category" className="block text-gray-600">
-              Category <span className="text-red-500">*</span>
-            </label>
-            <select
-              {...formik.getFieldProps("category")}
-              id="category"
-              className={`w-full mt-1 p-2 border rounded-md ${
-                formik.touched.category && formik.errors.category
-                  ? "border-red-500"
-                  : "border-gray-300"
-              }`}
-            >
-              <option value="">--</option>
-              {CATEGORIES.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            {formik.touched.category && formik.errors.category && (
-              <p className="text-red-500 text-sm mt-1">
-                {formik.errors.category}
-              </p>
-            )}
-          </div>
+        <SelectField
+          label="SUBCATEGORY"
+          value={selectedSubcategory}
+          onChange={(value) => {
+            setSelectedSubcategory(value); // Update selectedSubcategory state
+            handleChange("category", value); // Keep this to update formData
+          }}
+          options={
+            selectedCategory && selectedGender // Ensure selectedGender is not an empty string
+              ? categories[selectedGender]
+                  .find((cat) => cat.category === selectedCategory)
+                  ?.subcategories.map((subCat) => ({
+                    value: subCat,
+                    label: subCat,
+                  })) || []
+              : []
+          }
+        />
 
-          {/* Barcode Type Dropdown */}
-          <div>
-            <label htmlFor="barcode" className="block text-gray-600">
-              Barcode Type <span className="text-red-500">*</span>
-            </label>
-            <select
-              {...formik.getFieldProps("barcode")}
-              id="barcode"
-              className={`w-full mt-1 p-2 border rounded-md ${
-                formik.touched.barcode && formik.errors.barcode
-                  ? "border-red-500"
-                  : "border-gray-300"
-              }`}
-            >
-              <option value="">--</option>
-              {BARCODE_TYPES.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Price Fields */}
-          {/* buying price */}
-          <div>
-            <label htmlFor="buyingPrice" className="block text-gray-600">
-              Buying Price <span className="text-red-500">*</span>
-            </label>
-            <input
-              {...formik.getFieldProps("buyingPrice")}
-              id="buyingPrice"
-              type="number"
-              className="w-full mt-1 p-2 border rounded-md"
-            />
-          </div>
-
-          {/* selling price */}
-          <div>
-            <label htmlFor="sellingPrice" className="block text-gray-600">
-              Selling Price <span className="text-red-500">*</span>
-            </label>
-            <input
-              {...formik.getFieldProps("sellingPrice")}
-              id="sellingPrice"
-              type="number"
-              className="w-full mt-1 p-2 border rounded-md"
-            />
-          </div>
-
-          {/* VAT Dropdown */}
-          <div>
-            <label htmlFor="tax" className="block text-gray-600">
-              VAT
-            </label>
-            <select
-              {...formik.getFieldProps("tax")}
-              id="tax"
-              className="w-full mt-1 p-2 border rounded-md"
-            >
-              {VAT_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Refundable Radio Button Group */}
-          <div>
-            <label className="block text-gray-600 mb-2">
-              Refundable <span className="text-red-500">*</span>
-            </label>
-            <div className="flex gap-4">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  {...formik.getFieldProps("refundable")}
-                  value="yes"
-                  checked={formik.values.refundable === "yes"}
-                  className="mr-2"
-                />
-                Yes
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  {...formik.getFieldProps("refundable")}
-                  value="no"
-                  checked={formik.values.refundable === "no"}
-                  className="mr-2"
-                />
-                No
-              </label>
-            </div>
-          </div>
-
-          {/* Show Stock Out Radio Button Group */}
-          <div>
-            <label className="block text-gray-600 mb-2">
-              Show Stock Out <span className="text-red-500">*</span>
-            </label>
-            <div className="flex gap-4">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  {...formik.getFieldProps("stockOut")}
-                  value="enable"
-                  checked={formik.values.stockOut === "enable"}
-                  className="mr-2"
-                />
-                Enable
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  {...formik.getFieldProps("stockOut")}
-                  value="disable"
-                  checked={formik.values.stockOut === "disable"}
-                  className="mr-2"
-                />
-                Disable
-              </label>
-            </div>
-          </div>
-
-          {/* Radio Button Groups */}
-          <div>
-            <label className="block text-gray-600 mb-2">
-              Status <span className="text-red-500">*</span>
-            </label>
-            <div className="flex gap-4">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  {...formik.getFieldProps("status")}
-                  value="active"
-                  checked={formik.values.status === "active"}
-                  className="mr-2"
-                />
-                Active
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  {...formik.getFieldProps("status")}
-                  value="inactive"
-                  checked={formik.values.status === "inactive"}
-                  className="mr-2"
-                />
-                Inactive
-              </label>
-            </div>
-          </div>
-
-          {/* Low Stock Warning Field */}
-          <div>
-            <label htmlFor="lowStockWarning" className="block text-gray-600">
-              Low Stock Warning <span className="text-red-500">*</span>
-            </label>
-            <input
-              {...formik.getFieldProps("lowStockWarning")}
-              id="lowStockWarning"
-              type="number" // Change type to number
-              className={`w-full mt-1 p-2 border rounded-md ${
-                formik.touched.lowStockWarning && formik.errors.lowStockWarning
-                  ? "border-red-500"
-                  : "border-gray-300"
-              }`}
-            />
-            {formik.touched.lowStockWarning &&
-              formik.errors.lowStockWarning && (
-                <p className="text-red-500 text-sm mt-1">
-                  {formik.errors.lowStockWarning}
-                </p>
-              )}
-          </div>
-
-          {/* Maximum Purchase Quantity Field */}
-          <div>
-            <label
-              htmlFor="maxPurchaseQuantity"
-              className="block text-gray-600"
-            >
-              Maximum Purchase Quantity <span className="text-red-500">*</span>
-            </label>
-            <input
-              {...formik.getFieldProps("maxPurchaseQuantity")}
-              id="maxPurchaseQuantity"
-              type="number" // Change type to number
-              className={`w-full mt-1 p-2 border rounded-md ${
-                formik.touched.maxPurchaseQuantity &&
-                formik.errors.maxPurchaseQuantity
-                  ? "border-red-500"
-                  : "border-gray-300"
-              }`}
-            />
-            {formik.touched.maxPurchaseQuantity &&
-              formik.errors.maxPurchaseQuantity && (
-                <p className="text-red-500 text-sm mt-1">
-                  {formik.errors.maxPurchaseQuantity}
-                </p>
-              )}
-          </div>
-
-          {/* purchaseable */}
-          <div>
-            <label className="block text-gray-600 mb-2">
-              Can Purchase <span className="text-red-500">*</span>
-            </label>
-            <div className="flex gap-4">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  {...formik.getFieldProps("purchasable")}
-                  value="yes"
-                  checked={formik.values.purchasable === "yes"}
-                  className="mr-2"
-                />
-                Yes
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  {...formik.getFieldProps("purchasable")}
-                  value="no"
-                  checked={formik.values.purchasable === "no"}
-                  className="mr-2"
-                />
-                No
-              </label>
-            </div>
-          </div>
-
-          {/* Tags Field */}
-          <div>
-            <label htmlFor="tags" className="block text-gray-600">
-              Tags
-            </label>
-            <input
-              {...formik.getFieldProps("tags")}
-              id="tags"
-              type="text"
-              className="w-full mt-1 p-2 border rounded-md"
-            />
-          </div>
-
-          {/* Description field */}
-          <div className="col-span-2">
-            <label htmlFor="description" className="block text-gray-600">
-              Description
-            </label>
-            <textarea
-              {...formik.getFieldProps("description")}
-              id="description"
-              rows={4}
-              className="w-full mt-1 p-2 border rounded-md"
-            />
-          </div>
-        </div>
-
-        {/* submit */}
-        <div className="flex justify-end gap-4">
+        {/* BARCODE */}
+        <SelectField
+          label="BARCODE"
+          value={formData.barcode}
+          onChange={(value) => handleChange("barcode", value)}
+          options={[
+            { value: "", label: "-- Select Barcode --" },
+            { value: "EAN-13", label: "EAN-13" },
+            { value: "UPC-A", label: "UPC-A" },
+          ]}
+          error={isSubmitted && errors.barcode ? errors.barcode : undefined}
+        />
+        {/* BUYING PRICE */}
+        <InputField
+          label="BUYING PRICE"
+          value={formData.buyingPrice}
+          onChange={(value) => handleChange("buyingPrice", value)}
+          error={
+            isSubmitted && errors.buyingPrice ? errors.buyingPrice : undefined
+          }
+          type="number"
+        />
+        {/* SELLING PRICE */}
+        <InputField
+          label="SELLING PRICE"
+          value={formData.sellingPrice}
+          onChange={(value) => handleChange("sellingPrice", value)}
+          error={
+            isSubmitted && errors.sellingPrice ? errors.sellingPrice : undefined
+          }
+          type="number"
+        />
+        {/* STATUS */}
+        <RadioGroup
+          label="STATUS"
+          value={formData.status}
+          onChange={(value) => handleChange("status", value)}
+          options={[
+            { value: "Active", label: "Active" },
+            { value: "Inactive", label: "Inactive" },
+          ]}
+        />
+        {/* CAN PURCHASABLE */}
+        <RadioGroup
+          label="CAN PURCHASABLE"
+          value={formData.canPurchasable}
+          onChange={(value) => handleChange("canPurchasable", value)}
+          options={[
+            { value: "Yes", label: "Yes" },
+            { value: "No", label: "No" },
+          ]}
+        />
+        {/* SHOW STOCK OUT */}
+        <RadioGroup
+          label="SHOW STOCK OUT"
+          value={formData.showStockOut}
+          onChange={(value) => handleChange("showStockOut", value)}
+          options={[
+            { value: "Enable", label: "Enable" },
+            { value: "Disable", label: "Disable" },
+          ]}
+        />
+        {/* REFUNDABLE */}
+        <RadioGroup
+          label="REFUNDABLE"
+          value={formData.refundable}
+          onChange={(value) => handleChange("refundable", value)}
+          options={[
+            { value: "Yes", label: "Yes" },
+            { value: "No", label: "No" },
+          ]}
+        />
+        {/* MAXIMUM PURCHASE QUANTITY */}
+        <InputField
+          label="MAXIMUM PURCHASE QUANTITY"
+          value={formData.maxPurchaseQuantity}
+          onChange={(value) => handleChange("maxPurchaseQuantity", value)}
+          error={
+            isSubmitted && errors.maxPurchaseQuantity
+              ? errors.maxPurchaseQuantity
+              : undefined
+          }
+          type="number"
+        />
+        {/* LOW STOCK QUANTITY WARNING */}
+        <InputField
+          label="LOW STOCK QUANTITY WARNING"
+          value={formData.lowStockWarning}
+          onChange={(value) => handleChange("lowStockWarning", value)}
+          error={
+            isSubmitted && errors.lowStockWarning
+              ? errors.lowStockWarning
+              : undefined
+          }
+          type="number"
+        />
+        {/* UNIT */}
+        <SelectField
+          label="UNIT"
+          value={formData.unit}
+          onChange={(value) => handleChange("unit", value)}
+          options={[
+            { value: "piece(pc)", label: "Piece (pc)" },
+            { value: "Gram", label: "Gram" },
+            { value: "Litre", label: "Litre" },
+            { value: "Milliliter", label: "Milliliter" },
+          ]}
+          error={isSubmitted && errors.unit ? errors.unit : undefined}
+        />
+        {/* TAX */}
+        <SelectField
+          label="TAX"
+          value={formData.tax}
+          onChange={(value) => handleChange("tax", value)}
+          options={[
+            { value: "No Vat", label: "No Vat" },
+            { value: "Vat-5", label: "Vat-5" },
+            { value: "Vat-10", label: "Vat-10" },
+            { value: "Vat-20", label: "Vat-20" },
+          ]}
+          error={isSubmitted && errors.tax ? errors.tax : undefined}
+        />
+        {/* TAGS */}
+        <TagInput
+          tags={formData.tags}
+          onAddTag={handleAddTag}
+          onRemoveTag={handleRemoveTag}
+          tagInput={tagInput}
+          setTagInput={setTagInput}
+        />
+        {/* DESCRIPTION */}
+        <TextArea
+          label="DESCRIPTION"
+          value={formData.description}
+          onChange={(value) => handleChange("description", value)}
+        />
+        {/* SUBMIT */}
+        <div className="">
           <button
             type="submit"
-            className="bg-primary text-white px-4 py-2 rounded-md flex items-center"
+            className="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-600"
           >
-            <FaSave className="mr-2" /> Save
-          </button>
-          <button
-            type="button"
-            className="bg-gray-500 text-white px-4 py-2 rounded-md flex items-center"
-          >
-            <FaTimes className="mr-2" /> Close
+            Submit
           </button>
         </div>
       </form>

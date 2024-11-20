@@ -30,14 +30,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <Header openSidebar={openSidebar} setOpenSidebar={setOpenSidebar} />
       <div className="flex">
         <aside
-          className={`w-64 h-full relative shadow-md transform transition-all ease-in-out duration-300 ${
+          className={`w-64 h-full  relative shadow-md transform transition-all ease-in-out duration-300 ${
             openSidebar ? "left-0" : "left-[-16rem]"
           }`}
         >
           <Sidebar openSidebar={openSidebar} setOpenSidebar={setOpenSidebar} />
         </aside>
         <main
-          className={`p-4 bg-[#f7f7fc], overflow-y-scroll h-[90vh] transform transition-all ease-in-out duration-300 ${
+          className={` bg-[#f7f7fc], overflow-y-scroll h-[90vh] border border-red-500 transform transition-all ease-in-out duration-300 ${
             openSidebar ? "left-0 w-full" : "absolute z-0 w-full"
           }`}
         >
