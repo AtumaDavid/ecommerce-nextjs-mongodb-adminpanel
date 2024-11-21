@@ -10,6 +10,7 @@ import {
   FaTrash,
 } from "react-icons/fa";
 import { ProductTableProps, SortField } from "./types/product";
+import Link from "next/link";
 // import { ProductTableProps, SortField } from "../types/product";
 
 const ProductTable: React.FC<ProductTableProps> = ({
@@ -117,9 +118,14 @@ const ProductTable: React.FC<ProductTableProps> = ({
               </td>
               <td className="px-4 py-3 no-print">
                 <div className="flex gap-3">
-                  <button className="text-blue-500 hover:text-blue-700">
+                  <Link
+                    href={"/dashboard/products/edit/1"}
+                    as={`/dashboard/products/edit/${1}`}
+                    className="text-blue-500 hover:text-blue-700 "
+                  >
+                    {/* <h4 className="hidden ">View</h4> */}
                     <FaEye className="w-4 h-4" />
-                  </button>
+                  </Link>
                   <button className="text-green-500 hover:text-green-700">
                     <FaEdit className="w-4 h-4" />
                   </button>
