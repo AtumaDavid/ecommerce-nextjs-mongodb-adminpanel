@@ -1,4 +1,3 @@
-// components/DashboardProduct.tsx
 "use client";
 import AddProductForm from "@/components/Dashboard/Products/AddProductForm";
 import Pagination from "@/components/Dashboard/Products/Pagination";
@@ -7,6 +6,7 @@ import SidebarForm from "@/components/Dashboard/Products/SidebarForm";
 import TableControls from "@/components/Dashboard/Products/TableControls";
 import {
   Product,
+  ProductFormData,
   SortField,
   SortOrder,
 } from "@/components/Dashboard/Products/types/product";
@@ -15,36 +15,50 @@ import React, { useState, useMemo } from "react";
 
 const ITEMS_PER_PAGE = 10;
 
-const dummyProducts: Product[] = Array.from({ length: 40 }, (_, index) => ({
-  id: index + 1,
-  name: `Product ${index + 1}`,
-  image: `https://via.placeholder.com/80`,
-  category: ["Electronics", "Fashion", "Home & Kitchen", "Books"][
-    Math.floor(Math.random() * 4)
-  ],
-  buyingPrice: Math.floor(Math.random() * 500000) + 10000,
-  sellingPrice: Math.floor(Math.random() * 1000000) + 50000,
-  status: Math.random() > 0.2 ? "Active" : "Inactive",
-  description: `Description for Product ${index + 1}`,
-}));
+// interface CategoryInfo {
+//   gender: string;
+//   category: string;
+//   subcategory: string;
+// }
+
+// interface ProductFormData {
+//   name: string;
+//   categoryInfo: CategoryInfo;
+//   buyingPrice: string; // Assuming this is a string from the form
+//   sellingPrice: string; // Assuming this is a string from the form
+//   status: string;
+//   description: string;
+//   barcode: string;
+//   tax: "No Vat" | "Vat-5" | "Vat-10" | "Vat-20"; // Assuming these are the only possible values
+//   canPurchasable: boolean;
+//   showStockOut: boolean;
+//   refundable: boolean;
+//   maxPurchaseQuantity: string; // Assuming this is a string from the form
+//   lowStockWarning: string; // Assuming this is a string from the form
+//   unit: string;
+//   tags?: string[]; // Optional, assuming it can be an array of strings
+// }
 
 const DashboardProduct = () => {
+  const [products, setProducts] = useState<Product[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortField, setSortField] = useState<SortField>("name");
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
+  const [editingProduct, setEditingProduct] = useState<Product | undefined>(
+    undefined
+  );
 
   // Sort and filter products
   const filteredAndSortedProducts = useMemo(() => {
-    let filtered = [...dummyProducts];
+    let filtered = [...products];
 
     if (searchQuery) {
       filtered = filtered.filter(
         (product) =>
           product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          product.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          product.description.toLowerCase().includes(searchQuery.toLowerCase())
+          product.category.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
@@ -64,7 +78,7 @@ const DashboardProduct = () => {
     });
 
     return filtered;
-  }, [dummyProducts, searchQuery, sortField, sortOrder]);
+  }, [products, searchQuery, sortField, sortOrder]);
 
   // Pagination calculations
   const totalPages = Math.ceil(
@@ -81,6 +95,69 @@ const DashboardProduct = () => {
     }).format(price);
   };
 
+  const handleAddProduct = (formData: ProductFormData) => {
+    const newProduct: Product = {
+      id: Date.now(), // Unique ID
+      name: formData.name,
+      image: `https://via.placeholder.com/80?text=${encodeURIComponent(
+        formData.name
+      )}`,
+      category: `${formData.categoryInfo.gender} - ${formData.categoryInfo.category} - ${formData.categoryInfo.subcategory}`,
+      buyingPrice: parseFloat(formData.buyingPrice),
+      sellingPrice: parseFloat(formData.sellingPrice),
+      status: formData.status as "Active" | "Inactive",
+      description: formData.description,
+      barcode: parseInt(formData.barcode, 10),
+      tax: formData.tax as "No Vat" | "Vat-5" | "Vat-10" | "Vat-20", // Cast to the correct type
+      canPurchasable: formData.canPurchasable.toString(),
+      showStockOut: formData.showStockOut.toString(),
+      refundable: formData.refundable.toString(), // Add this line
+      maxPurchaseQuantity: parseInt(formData.maxPurchaseQuantity).toString(), // Add this line
+      lowStockWarning: parseInt(formData.lowStockWarning).toString(), // Add this line
+      unit: formData.unit, // Add this line
+      tags: formData.tags || [], // Add this line, ensure it's an array
+    };
+
+    setProducts((prevProducts) => [...prevProducts, newProduct]);
+    setIsSidebarOpen(false);
+  };
+
+  const handleUpdateProduct = (formData: ProductFormData) => {
+    if (editingProduct) {
+      const updatedProduct: Product = {
+        ...editingProduct,
+        name: formData.name,
+        category: `${formData.categoryInfo.gender} - ${formData.categoryInfo.category} - ${formData.categoryInfo.subcategory}`,
+        buyingPrice: parseFloat(formData.buyingPrice),
+        sellingPrice: parseFloat(formData.sellingPrice),
+        status: formData.status as "Active" | "Inactive",
+        description: formData.description,
+        barcode: parseInt(formData.barcode, 10),
+        tax: formData.tax as "No Vat" | "Vat-5" | "Vat-10" | "Vat-20", // Cast to the correct type
+        canPurchasable: formData.canPurchasable.toString(),
+        showStockOut: formData.showStockOut.toString(),
+        refundable: formData.refundable.toString(), // Add this line
+        maxPurchaseQuantity: parseInt(formData.maxPurchaseQuantity).toString(), // Add this line
+        lowStockWarning: parseInt(formData.lowStockWarning).toString(), // Add this line
+        unit: formData.unit, // Add this line
+        tags: formData.tags || [], // Add this line, ensure it's an array
+      };
+
+      setProducts((prevProducts) =>
+        prevProducts.map((p) =>
+          p.id === editingProduct.id ? updatedProduct : p
+        )
+      );
+      setIsSidebarOpen(false);
+      setEditingProduct(undefined);
+    }
+  };
+
+  const handleEditProduct = (product: Product) => {
+    setEditingProduct(product);
+    setIsSidebarOpen(true);
+  };
+
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");
@@ -92,39 +169,28 @@ const DashboardProduct = () => {
 
   const handleExport = (type: "print" | "excel") => {
     if (type === "print") {
-      // Add print styles
       const printStyle = createPrintStyle();
       document.head.appendChild(printStyle);
-
-      // Trigger print
       window.print();
-
-      // Remove print styles after printing
       setTimeout(() => {
         document.head.removeChild(printStyle);
       }, 100);
     } else {
-      // Export to Excel (CSV)
       exportToExcel(filteredAndSortedProducts);
     }
   };
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    setCurrentPage(1); // Reset to first page when searching
+    setCurrentPage(1);
   };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
 
-  const handleAddProduct = () => {
-    setIsSidebarOpen(true);
-  };
-
   return (
     <div className="container mx-auto">
-      {/* Header */}
       <div className="text-xl font-medium text-gray-600 p-2">
         <span>
           Dashboard /{" "}
@@ -134,25 +200,22 @@ const DashboardProduct = () => {
         </span>
       </div>
 
-      {/* Main Content */}
       <div className="bg-white rounded-lg shadow-sm p-3">
-        {/* Table Controls */}
         <TableControls
           onSearch={handleSearch}
-          onAddProduct={handleAddProduct}
+          onAddProduct={() => setIsSidebarOpen(true)}
           searchQuery={searchQuery}
           onExport={handleExport}
         />
 
-        {/* Product Table */}
         <ProductTable
           products={currentProducts}
           sortConfig={{ field: sortField, order: sortOrder }}
           onSort={handleSort}
           formatPrice={formatPrice}
+          onEditProduct={handleEditProduct}
         />
 
-        {/* Pagination */}
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
@@ -163,17 +226,20 @@ const DashboardProduct = () => {
         />
       </div>
 
-      {/* Add Product Sidebar - You can create a separate component for this */}
       <SidebarForm
         isOpen={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
-        title="Add New Product"
+        // onClose={() => setIsSidebarOpen(false)}
+        onClose={() => {
+          setIsSidebarOpen(false);
+          setEditingProduct(undefined);
+        }}
+        // title="Add New Product"
+        title={editingProduct ? "Edit Product" : "Add New Product"}
       >
+        {/* <AddProductForm onSubmit={handleAddProduct} /> */}
         <AddProductForm
-          onSubmit={(data) => {
-            console.log("Form submitted:", data);
-            setIsSidebarOpen(false);
-          }}
+          onSubmit={editingProduct ? handleUpdateProduct : handleAddProduct}
+          initialData={editingProduct}
         />
       </SidebarForm>
     </div>

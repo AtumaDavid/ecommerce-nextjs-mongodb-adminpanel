@@ -9,15 +9,20 @@ import {
   FaEdit,
   FaTrash,
 } from "react-icons/fa";
-import { ProductTableProps, SortField } from "./types/product";
+import { Product, ProductTableProps, SortField } from "./types/product";
 import Link from "next/link";
 // import { ProductTableProps, SortField } from "../types/product";
 
-const ProductTable: React.FC<ProductTableProps> = ({
+interface ExtendedProductTableProps extends ProductTableProps {
+  onEditProduct?: (product: Product) => void;
+}
+
+const ProductTable: React.FC<ExtendedProductTableProps> = ({
   products,
   sortConfig,
   onSort,
   formatPrice,
+  onEditProduct,
 }) => {
   const getSortIcon = (field: SortField) => {
     if (sortConfig.field !== field) return <FaSort className="w-3 h-3" />;
@@ -47,7 +52,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
               onClick={() => onSort("category")}
             >
               <div className="flex items-center gap-2">
-                CATEGORY
+                CATEGORY INFO
                 <span className="no-print">{getSortIcon("category")}</span>
               </div>
             </th>
@@ -126,7 +131,10 @@ const ProductTable: React.FC<ProductTableProps> = ({
                     {/* <h4 className="hidden ">View</h4> */}
                     <FaEye className="w-4 h-4" />
                   </Link>
-                  <button className="text-green-500 hover:text-green-700">
+                  <button
+                    className="text-green-500 hover:text-green-700"
+                    onClick={() => onEditProduct && onEditProduct(product)}
+                  >
                     <FaEdit className="w-4 h-4" />
                   </button>
                   <button className="text-red-500 hover:text-red-700">

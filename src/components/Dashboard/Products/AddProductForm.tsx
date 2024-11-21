@@ -4,37 +4,39 @@ import SelectField from "./ProductsForm/SelectField";
 import RadioGroup from "./ProductsForm/RadioGroup";
 import TagInput from "./ProductsForm/TagInput";
 import TextArea from "./ProductsForm/TextArea";
+import { Product, ProductFormData } from "./types/product";
 
-interface CategoryInfo {
-  gender: string;
-  category: string;
-  subcategory: string;
-}
+// interface CategoryInfo {
+//   gender: string;
+//   category: string;
+//   subcategory: string;
+// }
 
-interface FormData {
-  name: string;
-  sku: string;
-  categoryInfo: CategoryInfo;
-  barcode: string;
-  buyingPrice: string;
-  sellingPrice: string;
-  tax: string;
-  status: string;
-  canPurchasable: string;
-  showStockOut: string;
-  refundable: string;
-  maxPurchaseQuantity: string;
-  lowStockWarning: string;
-  unit: string;
-  weight?: string;
-  tags: string[];
-  description: string;
-}
+// interface FormData {
+//   name: string;
+//   sku: string;
+//   categoryInfo: CategoryInfo;
+//   barcode: string;
+//   buyingPrice: string;
+//   sellingPrice: string;
+//   tax: "No Vat" | "Vat-5" | "Vat-10" | "Vat-20";
+//   status: string;
+//   canPurchasable: string;
+//   showStockOut: string;
+//   refundable: string;
+//   maxPurchaseQuantity: string;
+//   lowStockWarning: string;
+//   unit: string;
+//   weight?: string;
+//   tags?: string[];
+//   description: string;
+// }
 
 type Gender = "men" | "women" | "juniors";
 
 interface AddProductFormProps {
-  onSubmit: (data: FormData) => void; // Ensure proper type definition
+  onSubmit: (data: ProductFormData) => void; // Ensure proper type definition
+  initialData?: Product;
 }
 
 interface Category {
@@ -116,39 +118,54 @@ const categories: Record<Gender, Category[]> = {
   ],
 };
 
-const ProductForm: React.FC<AddProductFormProps> = ({ onSubmit }) => {
-  const [formData, setFormData] = useState<FormData>({
-    name: "",
-    sku: Math.floor(Math.random() * 100000).toString(),
+const ProductForm: React.FC<AddProductFormProps> = ({
+  onSubmit,
+  initialData,
+}) => {
+  const [formData, setFormData] = useState<ProductFormData>({
+    name: initialData?.name || "",
+    sku: initialData
+      ? initialData.id.toString()
+      : Math.floor(Math.random() * 100000).toString(),
     categoryInfo: {
-      gender: "",
-      category: "",
-      subcategory: "",
+      gender: initialData?.category?.split(" - ")[0] || "",
+      category: initialData?.category?.split(" - ")[1] || "",
+      subcategory: initialData?.category?.split(" - ")[2] || "",
     },
-    barcode: "",
-    buyingPrice: "",
-    sellingPrice: "",
-    tax: "No Vat",
-    status: "",
-    canPurchasable: "",
-    showStockOut: "",
-    refundable: "",
-    maxPurchaseQuantity: "",
-    lowStockWarning: "",
-    unit: "piece(pc)",
-    weight: "",
-    tags: [],
-    description: "",
+    barcode: initialData?.barcode?.toString() || "",
+    buyingPrice: initialData?.buyingPrice?.toString() || "",
+    sellingPrice: initialData?.sellingPrice?.toString() || "",
+    tax: initialData?.tax || "No Vat",
+    status: initialData?.status || "Active", // Default to Active
+    canPurchasable: initialData?.canPurchasable || "Yes", // Default to Yes
+    showStockOut: initialData?.showStockOut || "Enable", // Default to Enable
+    refundable: initialData?.refundable || "Yes", // Default to Yes
+    maxPurchaseQuantity: initialData?.maxPurchaseQuantity || "1",
+    lowStockWarning: initialData?.lowStockWarning || "0",
+    unit: initialData?.unit || "piece(pc)",
+    weight: initialData?.weight || "",
+    tags: initialData?.tags || [],
+    description: initialData?.description || "",
   });
 
-  const [errors, setErrors] = useState<{ [key in keyof FormData]?: string }>(
-    {}
-  );
+  const [errors, setErrors] = useState<{
+    [key in keyof ProductFormData]?: string;
+  }>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [tagInput, setTagInput] = useState("");
-  const [selectedGender, setSelectedGender] = useState<Gender | "">("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const [selectedSubcategory, setSelectedSubcategory] = useState<string>("");
+  // const [selectedGender, setSelectedGender] = useState<Gender | "">("");
+  // const [selectedCategory, setSelectedCategory] = useState<string>("");
+  // const [selectedSubcategory, setSelectedSubcategory] = useState<string>("");
+  const [selectedGender, setSelectedGender] = useState<string>(
+    initialData?.category.split(" - ")[0] || ""
+  );
+  const [selectedCategory, setSelectedCategory] = useState<string>(
+    initialData?.category.split(" - ")[1] || ""
+  );
+  // const [selectedSubcategory, setSelectedSubcategory] = useState<string>("");
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>(
+    initialData?.category.split(" - ")[2] || ""
+  );
 
   const handleGenderChange = (gender: string) => {
     if (gender === "men" || gender === "women" || gender === "juniors") {
@@ -200,7 +217,7 @@ const ProductForm: React.FC<AddProductFormProps> = ({ onSubmit }) => {
   };
 
   // HANDLE CHANGE
-  const handleChange = (field: keyof FormData, value: string) => {
+  const handleChange = (field: keyof ProductFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
 
     if (isSubmitted) {
@@ -214,8 +231,8 @@ const ProductForm: React.FC<AddProductFormProps> = ({ onSubmit }) => {
 
   // VALIDATE FORM
   const validateForm = () => {
-    const newErrors: { [key in keyof FormData]?: string } = {};
-    const requiredFields: (keyof FormData)[] = [
+    const newErrors: { [key in keyof ProductFormData]?: string } = {};
+    const requiredFields: (keyof ProductFormData)[] = [
       "name",
       "sku",
       "categoryInfo",
@@ -315,7 +332,7 @@ const ProductForm: React.FC<AddProductFormProps> = ({ onSubmit }) => {
           onChange={handleCategoryChange}
           options={
             selectedGender
-              ? categories[selectedGender].map((cat) => ({
+              ? categories[selectedGender as Gender].map((cat) => ({
                   value: cat.category,
                   label: cat.category,
                 }))
@@ -330,7 +347,7 @@ const ProductForm: React.FC<AddProductFormProps> = ({ onSubmit }) => {
           onChange={(value) => handleSubcategoryChange(value)} // Update this line
           options={
             selectedCategory && selectedGender // Ensure selectedGender is not an empty string
-              ? categories[selectedGender]
+              ? categories[selectedGender as Gender]
                   .find((cat) => cat.category === selectedCategory)
                   ?.subcategories.map((subCat) => ({
                     value: subCat,
@@ -477,12 +494,20 @@ const ProductForm: React.FC<AddProductFormProps> = ({ onSubmit }) => {
           onChange={(value) => handleChange("description", value)}
         />
         {/* SUBMIT */}
-        <div className="">
+        {/* <div className="">
           <button
             type="submit"
             className="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-600"
           >
             Submit
+          </button>
+        </div> */}
+        <div className="">
+          <button
+            type="submit"
+            className="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-600"
+          >
+            {initialData ? "Update Product" : "Submit Product"}
           </button>
         </div>
       </form>

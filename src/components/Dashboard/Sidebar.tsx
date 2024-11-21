@@ -22,6 +22,11 @@ export default function Sidebar({
           label: "Products",
           link: "/dashboard/products",
         },
+        // {
+        //   icon: <AiOutlineProduct />,
+        //   label: "Categories Information",
+        //   link: "/dashboard/categories-info",
+        // },
       ],
     },
   ];
