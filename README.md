@@ -2,3 +2,5 @@
 - npm i yup formik
 - multi-range-slider (npm i multi-range-slider-react)
 - npm install react-chartjs-2 chart.js react-icons
+- npm install --save-dev @types/draft-js
+- npm install draft-js

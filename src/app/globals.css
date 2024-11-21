@@ -38,3 +38,11 @@
   scroll-behavior: smooth;
   scrollbar-color: #037171 white;
 }
+
+.react-datepicker__time-container {
+  width: 100%; /* Adjust the width as needed */
+}
+
+.react-datepicker__time {
+  width: 100%; /* Adjust the width as needed */
+}
