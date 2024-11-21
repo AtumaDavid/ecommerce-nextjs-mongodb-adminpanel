@@ -37,7 +37,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <Sidebar openSidebar={openSidebar} setOpenSidebar={setOpenSidebar} />
         </aside>
         <main
-          className={` bg-[#f7f7fc], overflow-y-scroll h-[90vh] border border-red-500 transform transition-all ease-in-out duration-300 ${
+          className={` bg-[#f7f7fc], overflow-y-scroll h-[90vh] transform transition-all ease-in-out duration-300 ${
             openSidebar ? "left-0 w-full" : "absolute z-0 w-full"
           }`}
         >
