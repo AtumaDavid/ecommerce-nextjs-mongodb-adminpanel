@@ -5,10 +5,16 @@ import RadioGroup from "./ProductsForm/RadioGroup";
 import TagInput from "./ProductsForm/TagInput";
 import TextArea from "./ProductsForm/TextArea";
 
+interface CategoryInfo {
+  gender: string;
+  category: string;
+  subcategory: string;
+}
+
 interface FormData {
   name: string;
   sku: string;
-  category: string;
+  categoryInfo: CategoryInfo;
   barcode: string;
   buyingPrice: string;
   sellingPrice: string;
@@ -114,7 +120,11 @@ const ProductForm: React.FC<AddProductFormProps> = ({ onSubmit }) => {
   const [formData, setFormData] = useState<FormData>({
     name: "",
     sku: Math.floor(Math.random() * 100000).toString(),
-    category: "",
+    categoryInfo: {
+      gender: "",
+      category: "",
+      subcategory: "",
+    },
     barcode: "",
     buyingPrice: "",
     sellingPrice: "",
@@ -140,36 +150,56 @@ const ProductForm: React.FC<AddProductFormProps> = ({ onSubmit }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("");
 
-  // Function to handle gender change
   const handleGenderChange = (gender: string) => {
     if (gender === "men" || gender === "women" || gender === "juniors") {
       setSelectedGender(gender as Gender);
+      setFormData((prev) => ({
+        ...prev,
+        categoryInfo: {
+          ...prev.categoryInfo,
+          gender,
+        },
+      }));
       setSelectedCategory(""); // Reset category when gender changes
       setSelectedSubcategory(""); // Reset subcategory when gender changes
     }
   };
 
-  const categoryOptions = selectedGender
-    ? categories[selectedGender].map((cat) => ({
-        value: cat.category,
-        label: cat.category,
-      }))
-    : [];
-
   // Function to handle category change
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
+    setFormData((prev) => ({
+      ...prev,
+      categoryInfo: {
+        ...prev.categoryInfo,
+        category,
+      },
+    }));
     setSelectedSubcategory(""); // Reset subcategory when category changes
   };
 
-  // const handleGenderChange = (gender: string) => {
-  //   if (gender === "men" || gender === "women" || gender === "juniors") {
-  //     setSelectedGender(gender as Gender);
-  //     setSelectedCategory(""); // Reset category when gender changes
-  //     setSelectedSubcategory(""); // Reset subcategory when gender changes
-  //   }
-  // };
+  // HANDLE SUB-CATEGORY CHANGE
+  const handleSubcategoryChange = (subcategory: string) => {
+    setSelectedSubcategory(subcategory);
 
+    // Update subcategory in formData
+    setFormData((prev) => ({
+      ...prev,
+      categoryInfo: {
+        ...prev.categoryInfo,
+        subcategory,
+      },
+    }));
+
+    // Return the selected values for additional flexibility
+    return {
+      gender: selectedGender,
+      category: selectedCategory,
+      subcategory: subcategory,
+    };
+  };
+
+  // HANDLE CHANGE
   const handleChange = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
 
@@ -182,12 +212,13 @@ const ProductForm: React.FC<AddProductFormProps> = ({ onSubmit }) => {
     }
   };
 
+  // VALIDATE FORM
   const validateForm = () => {
     const newErrors: { [key in keyof FormData]?: string } = {};
     const requiredFields: (keyof FormData)[] = [
       "name",
       "sku",
-      "category",
+      "categoryInfo",
       "barcode",
       "buyingPrice",
       "sellingPrice",
@@ -200,7 +231,13 @@ const ProductForm: React.FC<AddProductFormProps> = ({ onSubmit }) => {
     ];
 
     requiredFields.forEach((field) => {
-      if (!formData[field]) {
+      if (field === "categoryInfo") {
+        // Specific validation for category info
+        const { gender, category, subcategory } = formData.categoryInfo;
+        if (!gender) newErrors[field] = "Gender is required";
+        if (!category) newErrors[field] = "Category is required";
+        if (!subcategory) newErrors[field] = "Subcategory is required";
+      } else if (!formData[field]) {
         newErrors[field] = "This field is required";
       }
     });
@@ -208,6 +245,7 @@ const ProductForm: React.FC<AddProductFormProps> = ({ onSubmit }) => {
     return newErrors;
   };
 
+  // HANDLE SUBMIT FUNCTION
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitted(true);
@@ -258,7 +296,7 @@ const ProductForm: React.FC<AddProductFormProps> = ({ onSubmit }) => {
           onChange={(value) => handleChange("sku", value)}
           error={isSubmitted && errors.sku ? errors.sku : undefined}
         />
-        {/* CATEGORY */}
+        {/* CATEGORY INFO: GENDER*/}
         <RadioGroup
           label="GENDER"
           value={selectedGender}
@@ -270,6 +308,7 @@ const ProductForm: React.FC<AddProductFormProps> = ({ onSubmit }) => {
           ]}
         />
 
+        {/* CATEGORY INFO: CATEGORY */}
         <SelectField
           label="CATEGORY"
           value={selectedCategory}
@@ -284,13 +323,11 @@ const ProductForm: React.FC<AddProductFormProps> = ({ onSubmit }) => {
           }
         />
 
+        {/* CATEGORY INFO: SUB-CATEGORY */}
         <SelectField
           label="SUBCATEGORY"
           value={selectedSubcategory}
-          onChange={(value) => {
-            setSelectedSubcategory(value); // Update selectedSubcategory state
-            handleChange("category", value); // Keep this to update formData
-          }}
+          onChange={(value) => handleSubcategoryChange(value)} // Update this line
           options={
             selectedCategory && selectedGender // Ensure selectedGender is not an empty string
               ? categories[selectedGender]
