@@ -1,7 +1,9 @@
 import Link from "next/link";
 import React, { useState } from "react";
-import { AiOutlineProduct } from "react-icons/ai";
+import { CiShoppingTag } from "react-icons/ci";
 import { FaThLarge } from "react-icons/fa";
+import { MdOutlineRemoveShoppingCart } from "react-icons/md";
+import { RiProductHuntLine, RiRefund2Line } from "react-icons/ri";
 
 interface DashboardSidebarProps {
   openSidebar: boolean;
@@ -18,15 +20,30 @@ export default function Sidebar({
       title: "Product & Stocks",
       items: [
         {
-          icon: <AiOutlineProduct />,
+          icon: <RiProductHuntLine />,
           label: "Products",
           link: "/dashboard/products",
         },
-        // {
-        //   icon: <AiOutlineProduct />,
-        //   label: "Categories Information",
-        //   link: "/dashboard/categories-info",
-        // },
+      ],
+    },
+    {
+      title: "Orders",
+      items: [
+        {
+          icon: <CiShoppingTag />,
+          label: "View Orders",
+          link: "/dashboard/orders",
+        },
+        {
+          icon: <MdOutlineRemoveShoppingCart />,
+          label: "Return Orders",
+          link: "/dashboard/return-orders",
+        },
+        {
+          icon: <RiRefund2Line />,
+          label: "Return &  Refunds",
+          link: "/dashboard/return-and-refund",
+        },
       ],
     },
   ];

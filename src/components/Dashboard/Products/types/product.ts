@@ -62,7 +62,7 @@ export interface SidebarProps {
   children?: React.ReactNode;
 }
 
-//  ASDFG
+//  PRODUCT FORM
 export interface ProductFormData {
   name: string;
   sku: string;
