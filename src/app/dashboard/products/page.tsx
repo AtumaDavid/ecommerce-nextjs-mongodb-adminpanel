@@ -15,30 +15,6 @@ import React, { useState, useMemo } from "react";
 
 const ITEMS_PER_PAGE = 10;
 
-// interface CategoryInfo {
-//   gender: string;
-//   category: string;
-//   subcategory: string;
-// }
-
-// interface ProductFormData {
-//   name: string;
-//   categoryInfo: CategoryInfo;
-//   buyingPrice: string; // Assuming this is a string from the form
-//   sellingPrice: string; // Assuming this is a string from the form
-//   status: string;
-//   description: string;
-//   barcode: string;
-//   tax: "No Vat" | "Vat-5" | "Vat-10" | "Vat-20"; // Assuming these are the only possible values
-//   canPurchasable: boolean;
-//   showStockOut: boolean;
-//   refundable: boolean;
-//   maxPurchaseQuantity: string; // Assuming this is a string from the form
-//   lowStockWarning: string; // Assuming this is a string from the form
-//   unit: string;
-//   tags?: string[]; // Optional, assuming it can be an array of strings
-// }
-
 const DashboardProduct = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -108,14 +84,14 @@ const DashboardProduct = () => {
       status: formData.status as "Active" | "Inactive",
       description: formData.description,
       barcode: parseInt(formData.barcode, 10),
-      tax: formData.tax as "No Vat" | "Vat-5" | "Vat-10" | "Vat-20", // Cast to the correct type
+      tax: formData.tax as "No Vat" | "Vat-5" | "Vat-10" | "Vat-20",
       canPurchasable: formData.canPurchasable.toString(),
       showStockOut: formData.showStockOut.toString(),
-      refundable: formData.refundable.toString(), // Add this line
-      maxPurchaseQuantity: parseInt(formData.maxPurchaseQuantity).toString(), // Add this line
-      lowStockWarning: parseInt(formData.lowStockWarning).toString(), // Add this line
-      unit: formData.unit, // Add this line
-      tags: formData.tags || [], // Add this line, ensure it's an array
+      refundable: formData.refundable.toString(),
+      maxPurchaseQuantity: parseInt(formData.maxPurchaseQuantity).toString(),
+      lowStockWarning: parseInt(formData.lowStockWarning).toString(),
+      unit: formData.unit,
+      tags: formData.tags || [],
     };
 
     setProducts((prevProducts) => [...prevProducts, newProduct]);
@@ -133,14 +109,14 @@ const DashboardProduct = () => {
         status: formData.status as "Active" | "Inactive",
         description: formData.description,
         barcode: parseInt(formData.barcode, 10),
-        tax: formData.tax as "No Vat" | "Vat-5" | "Vat-10" | "Vat-20", // Cast to the correct type
+        tax: formData.tax as "No Vat" | "Vat-5" | "Vat-10" | "Vat-20",
         canPurchasable: formData.canPurchasable.toString(),
         showStockOut: formData.showStockOut.toString(),
-        refundable: formData.refundable.toString(), // Add this line
-        maxPurchaseQuantity: parseInt(formData.maxPurchaseQuantity).toString(), // Add this line
-        lowStockWarning: parseInt(formData.lowStockWarning).toString(), // Add this line
-        unit: formData.unit, // Add this line
-        tags: formData.tags || [], // Add this line, ensure it's an array
+        refundable: formData.refundable.toString(),
+        maxPurchaseQuantity: parseInt(formData.maxPurchaseQuantity).toString(),
+        lowStockWarning: parseInt(formData.lowStockWarning).toString(),
+        unit: formData.unit,
+        tags: formData.tags || [],
       };
 
       setProducts((prevProducts) =>

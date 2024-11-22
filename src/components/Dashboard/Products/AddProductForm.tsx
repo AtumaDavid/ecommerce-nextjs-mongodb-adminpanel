@@ -6,36 +6,10 @@ import TagInput from "./ProductsForm/TagInput";
 import TextArea from "./ProductsForm/TextArea";
 import { Product, ProductFormData } from "./types/product";
 
-// interface CategoryInfo {
-//   gender: string;
-//   category: string;
-//   subcategory: string;
-// }
-
-// interface FormData {
-//   name: string;
-//   sku: string;
-//   categoryInfo: CategoryInfo;
-//   barcode: string;
-//   buyingPrice: string;
-//   sellingPrice: string;
-//   tax: "No Vat" | "Vat-5" | "Vat-10" | "Vat-20";
-//   status: string;
-//   canPurchasable: string;
-//   showStockOut: string;
-//   refundable: string;
-//   maxPurchaseQuantity: string;
-//   lowStockWarning: string;
-//   unit: string;
-//   weight?: string;
-//   tags?: string[];
-//   description: string;
-// }
-
 type Gender = "men" | "women" | "juniors";
 
 interface AddProductFormProps {
-  onSubmit: (data: ProductFormData) => void; // Ensure proper type definition
+  onSubmit: (data: ProductFormData) => void;
   initialData?: Product;
 }
 
@@ -344,9 +318,9 @@ const ProductForm: React.FC<AddProductFormProps> = ({
         <SelectField
           label="SUBCATEGORY"
           value={selectedSubcategory}
-          onChange={(value) => handleSubcategoryChange(value)} // Update this line
+          onChange={(value) => handleSubcategoryChange(value)}
           options={
-            selectedCategory && selectedGender // Ensure selectedGender is not an empty string
+            selectedCategory && selectedGender
               ? categories[selectedGender as Gender]
                   .find((cat) => cat.category === selectedCategory)
                   ?.subcategories.map((subCat) => ({
@@ -494,14 +468,6 @@ const ProductForm: React.FC<AddProductFormProps> = ({
           onChange={(value) => handleChange("description", value)}
         />
         {/* SUBMIT */}
-        {/* <div className="">
-          <button
-            type="submit"
-            className="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-600"
-          >
-            Submit
-          </button>
-        </div> */}
         <div className="">
           <button
             type="submit"
