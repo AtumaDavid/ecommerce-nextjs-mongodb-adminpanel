@@ -4,13 +4,18 @@ import { Formik, Form, Field, ErrorMessage, FormikHelpers } from "formik";
 import * as Yup from "yup";
 import Image from "next/image";
 import Link from "next/link";
+import { axiosInstance } from "@/lib/axiosInstance";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/context/ToastContext";
 
 interface SignUpFormValues {
   name: string;
   email: string;
+  mobile: string;
   password: string;
 }
 
+// VALIDATION SCHEMA FORMIK
 const validationSchema = Yup.object().shape({
   name: Yup.string()
     .min(2, "Name must be at least 2 characters")
@@ -18,6 +23,7 @@ const validationSchema = Yup.object().shape({
   email: Yup.string()
     .email("Invalid email address")
     .required("Email is required"),
+  mobile: Yup.string().required("Mobile Number is required"),
   password: Yup.string()
     .min(8, "Password must be at least 8 characters")
     .matches(/[a-z]/, "Password must contain at least one lowercase letter")
@@ -29,18 +35,45 @@ const validationSchema = Yup.object().shape({
 const initialValues: SignUpFormValues = {
   name: "",
   email: "",
+  mobile: "",
   password: "",
 };
 
 export default function Page() {
+  const navigate = useRouter();
+  const { showToast } = useToast();
+
+  // HANDLE SUBMIT
   const handleSubmit = async (
     values: SignUpFormValues,
     { setSubmitting, resetForm }: FormikHelpers<SignUpFormValues>
-  ) => {
+  ): Promise<void> => {
+    setSubmitting(true);
     try {
       // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log("Form values:", values);
+      // await new Promise((resolve) => setTimeout(resolve, 1000));
+      // console.log("Form values:", values);
+      // On submit
+      axiosInstance
+        .post("/register", values)
+        .then((data) => {
+          console.log(data);
+          // Redirect to login page
+          if (data?.status) {
+            showToast({
+              type: "success",
+              message: "Registration successful! Redirecting to Sign In.",
+            });
+            navigate.push("/signin");
+          }
+        })
+        .catch((err) => {
+          showToast({
+            type: "error",
+            message: err.response?.data?.message || "Registration failed.",
+          });
+          console.log(err.response.data);
+        });
       resetForm();
     } catch (error) {
       console.error("Submission error:", error);
@@ -80,6 +113,7 @@ export default function Page() {
             >
               {({ isSubmitting, touched, errors }) => (
                 <Form className="space-y-6">
+                  {/* NAME */}
                   <div>
                     <label
                       htmlFor="name"
@@ -104,6 +138,7 @@ export default function Page() {
                     />
                   </div>
 
+                  {/* EMAIL */}
                   <div>
                     <label
                       htmlFor="email"
@@ -129,6 +164,32 @@ export default function Page() {
                     />
                   </div>
 
+                  {/* NUMBER */}
+                  <div>
+                    <label
+                      htmlFor="mobile"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Mobile Number <span className="text-red-500">*</span>
+                    </label>
+                    <Field
+                      type="tel" // Change type to 'tel' for mobile number
+                      id="mobile"
+                      name="mobile" // Change name to 'mobile'
+                      className={`w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent ${
+                        touched.mobile && errors.mobile
+                          ? "border-red-500"
+                          : "border-gray-300"
+                      }`}
+                    />
+                    <ErrorMessage
+                      name="mobile" // Change name to 'mobile'
+                      component="div"
+                      className="mt-1 text-sm text-red-500"
+                    />
+                  </div>
+
+                  {/* PASSWORD */}
                   <div>
                     <label
                       htmlFor="password"
@@ -153,6 +214,8 @@ export default function Page() {
                       className="mt-1 text-sm text-red-500"
                     />
                   </div>
+
+                  {/* SUBMIT */}
                   <button
                     type="submit"
                     disabled={isSubmitting}
