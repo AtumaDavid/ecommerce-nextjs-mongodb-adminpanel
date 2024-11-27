@@ -12,7 +12,7 @@ import MenuTabs from "./MenuTabs";
 
 export default function Header() {
   const pathname = usePathname();
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   console.log(setIsLoggedIn);
   // const handleLogin = () => {

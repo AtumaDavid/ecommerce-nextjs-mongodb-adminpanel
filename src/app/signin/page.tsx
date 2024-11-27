@@ -1,9 +1,25 @@
 "use client";
-import React, { Suspense, useState } from "react";
+import React, { useState } from "react";
 import { Formik, Form, Field, ErrorMessage, FormikHelpers } from "formik";
 import * as Yup from "yup";
 import Image from "next/image";
 import Link from "next/link";
+import { axiosInstance } from "@/lib/axiosInstance";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/context/ToastContext";
+import Cookies from "js-cookie";
+
+// Loading Component
+const Loading = () => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-500 bg-opacity-50">
+    <div
+      className="spinner-border animate-spin inline-block w-8 h-8 border-4 border-t-primary border-r-transparent rounded-full"
+      role="status"
+    >
+      <span className="sr-only">Loading...</span>
+    </div>
+  </div>
+);
 
 interface LoginFormValues {
   email: string;
@@ -25,19 +41,86 @@ const initialValues: LoginFormValues = {
 };
 
 export default function Page() {
+  const navigate = useRouter();
+  const { showToast } = useToast();
   const [usePhone, setUsePhone] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // const handleSubmit = async (
+  //   values: LoginFormValues,
+  //   { setSubmitting }: FormikHelpers<LoginFormValues>
+  // ): Promise<void> => {
+  //   setLoading(true); // Start loading
+  //   try {
+  //     const response = await axiosInstance.post("/login", values);
+
+  //     if (response?.data?.status) {
+  //       showToast({
+  //         type: "success",
+  //         message: "Login successful!",
+  //       });
+
+  //       Cookies.set("token", response.data.token, { expires: 1 });
+  //       Cookies.set("role", response.data.role, { expires: 1 });
+
+  //       // Navigate based on the role
+  //       if (response.data.role === "customer") {
+  //         navigate.push("/");
+  //       } else {
+  //         navigate.push("/dashboard");
+  //       }
+  //     }
+  //   } catch (error: any) {
+  //     // Show error message
+  //     showToast({
+  //       type: "error",
+  //       message: error.response?.data?.msg || "Error with login",
+  //     });
+  //     console.error("Login error:", error);
+  //   } finally {
+  //     setSubmitting(false); // Mark form as not submitting
+  //     setLoading(false); // Stop loading
+  //   }
+  // };
 
   const handleSubmit = async (
     values: LoginFormValues,
     { setSubmitting }: FormikHelpers<LoginFormValues>
-  ) => {
+  ): Promise<void> => {
+    setLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log("Form values:", values);
+      // await new Promise((resolve) => setTimeout(resolve, 1000));
+      // console.log("Form values:", values);
+      axiosInstance
+        .post("/login", values)
+        .then((data) => {
+          console.log(data);
+          if (data?.status) {
+            showToast({
+              type: "success",
+              message: "Login successful!.",
+            });
+            Cookies.set("token", data?.data?.token, { expires: 1 });
+            Cookies.set("role", data?.data?.role, { expires: 1 });
+            if (data?.data?.role === "customer") {
+              navigate.push("/");
+            } else {
+              navigate.push("/dashboard");
+            }
+          }
+        })
+        .catch((err) => {
+          showToast({
+            type: "error",
+            message: err.response?.data?.msg || "Error with login",
+          });
+          console.log(err.response.data);
+        });
     } catch (error) {
       console.error("Login error:", error);
     } finally {
       setSubmitting(false);
+      setLoading(false);
     }
   };
 
@@ -46,7 +129,8 @@ export default function Page() {
   };
 
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <>
+      {loading && <Loading />}
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <div className="max-w-4xl w-full flex rounded-xl shadow-lg overflow-hidden bg-white">
           {/* Image Section */}
@@ -220,6 +304,6 @@ export default function Page() {
           </div>
         </div>
       </div>
-    </Suspense>
+    </>
   );
 }

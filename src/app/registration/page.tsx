@@ -70,7 +70,7 @@ export default function Page() {
         .catch((err) => {
           showToast({
             type: "error",
-            message: err.response?.data?.message || "Registration failed.",
+            message: err.response?.data?.msg || "Registration failed.",
           });
           console.log(err.response.data);
         });
