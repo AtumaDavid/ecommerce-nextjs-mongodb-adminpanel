@@ -5,6 +5,7 @@ import "./globals.css";
 import Header from "@/components/Layout/Header";
 import Footer from "@/components/Layout/Footer";
 import { usePathname } from "next/navigation";
+import { ToastProvider } from "@/context/ToastContext";
 
 // import Test from "@/components/Layout/Test";
 
@@ -35,13 +36,15 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {/* <Header /> */}
-        {pathname?.startsWith("/dashboard") ? "" : <Header />}
-        {/* <Test /> */}
+        <ToastProvider>
+          {/* <Header /> */}
+          {pathname?.startsWith("/dashboard") ? "" : <Header />}
+          {/* <Test /> */}
 
-        {children}
-        {/* <Footer /> */}
-        {pathname?.startsWith("/dashboard") ? "" : <Footer />}
+          {children}
+          {/* <Footer /> */}
+          {pathname?.startsWith("/dashboard") ? "" : <Footer />}
+        </ToastProvider>
       </body>
     </html>
   );

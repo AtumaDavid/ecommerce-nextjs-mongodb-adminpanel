@@ -4,3 +4,4 @@
 - npm install react-chartjs-2 chart.js react-icons
 - npm install --save-dev @types/draft-js
 - npm install draft-js
+- npm i axios
