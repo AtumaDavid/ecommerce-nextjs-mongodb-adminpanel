@@ -1,14 +1,16 @@
 // types/product.ts
 export interface Product {
-  id: number;
+  _id: number;
   name: string;
-  image: string;
+  // sku: string;
+  categoryInfo: CategoryInfo;
+  images: string;
   category: string;
   buyingPrice: number;
   sellingPrice: number;
   status: "Active" | "Inactive";
   description: string;
-  barcode: number;
+  barcode: string;
   tax: "No Vat" | "Vat-5" | "Vat-10" | "Vat-20";
   canPurchasable: string;
   showStockOut: string;
@@ -18,6 +20,7 @@ export interface Product {
   unit: string;
   weight?: string;
   tags: string[];
+  // createdAt: Date;
 }
 
 export type SortField = keyof Pick<
@@ -64,8 +67,9 @@ export interface SidebarProps {
 
 //  PRODUCT FORM
 export interface ProductFormData {
+  images: string;
   name: string;
-  sku: string;
+  // sku: string;
   categoryInfo: CategoryInfo;
   barcode: string;
   buyingPrice: string;

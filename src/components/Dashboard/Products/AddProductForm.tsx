@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import InputField from "./ProductsForm/InputField";
 import SelectField from "./ProductsForm/SelectField";
 import RadioGroup from "./ProductsForm/RadioGroup";
 import TagInput from "./ProductsForm/TagInput";
 import TextArea from "./ProductsForm/TextArea";
 import { Product, ProductFormData } from "./types/product";
+import axiosInstance from "@/lib/axiosInstance";
 
 type Gender = "men" | "women" | "juniors";
 
@@ -98,15 +99,16 @@ const ProductForm: React.FC<AddProductFormProps> = ({
 }) => {
   const [formData, setFormData] = useState<ProductFormData>({
     name: initialData?.name || "",
-    sku: initialData
-      ? initialData.id.toString()
-      : Math.floor(Math.random() * 100000).toString(),
+    images: initialData?.images || "",
+    // sku: initialData
+    //   ? initialData.id.toString()
+    //   : Math.floor(Math.random() * 100000).toString(),
     categoryInfo: {
       gender: initialData?.category?.split(" - ")[0] || "",
       category: initialData?.category?.split(" - ")[1] || "",
       subcategory: initialData?.category?.split(" - ")[2] || "",
     },
-    barcode: initialData?.barcode?.toString() || "",
+    barcode: initialData?.barcode || "",
     buyingPrice: initialData?.buyingPrice?.toString() || "",
     sellingPrice: initialData?.sellingPrice?.toString() || "",
     tax: initialData?.tax || "No Vat",
@@ -121,6 +123,7 @@ const ProductForm: React.FC<AddProductFormProps> = ({
     tags: initialData?.tags || [],
     description: initialData?.description || "",
   });
+  console.log("initial data:", initialData);
 
   const [errors, setErrors] = useState<{
     [key in keyof ProductFormData]?: string;
@@ -131,14 +134,14 @@ const ProductForm: React.FC<AddProductFormProps> = ({
   // const [selectedCategory, setSelectedCategory] = useState<string>("");
   // const [selectedSubcategory, setSelectedSubcategory] = useState<string>("");
   const [selectedGender, setSelectedGender] = useState<string>(
-    initialData?.category.split(" - ")[0] || ""
+    initialData?.categoryInfo?.category?.split(" - ")[0] || ""
   );
   const [selectedCategory, setSelectedCategory] = useState<string>(
-    initialData?.category.split(" - ")[1] || ""
+    initialData?.categoryInfo?.category?.split(" - ")[1] || ""
   );
   // const [selectedSubcategory, setSelectedSubcategory] = useState<string>("");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>(
-    initialData?.category.split(" - ")[2] || ""
+    initialData?.categoryInfo?.category?.split(" - ")[2] || ""
   );
 
   const handleGenderChange = (gender: string) => {
@@ -208,7 +211,7 @@ const ProductForm: React.FC<AddProductFormProps> = ({
     const newErrors: { [key in keyof ProductFormData]?: string } = {};
     const requiredFields: (keyof ProductFormData)[] = [
       "name",
-      "sku",
+      // "sku",
       "categoryInfo",
       "barcode",
       "buyingPrice",
@@ -237,16 +240,53 @@ const ProductForm: React.FC<AddProductFormProps> = ({
   };
 
   // HANDLE SUBMIT FUNCTION
+  // const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  //   e.preventDefault();
+  //   setIsSubmitted(true);
+
+  //   const newErrors = validateForm();
+  //   setErrors(newErrors);
+
+  //   if (Object.keys(newErrors).length === 0) {
+  //     console.log("Form submitted:", formData);
+  //     onSubmit(formData); // Pass data to parent
+  //   }
+  // };
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
     setIsSubmitted(true);
 
     const newErrors = validateForm();
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-      console.log("Form submitted:", formData);
-      onSubmit(formData); // Pass data to parent
+      // Convert string values to appropriate types
+      const submitData = {
+        ...formData,
+        // canPurchasable: formData.canPurchasable === "Yes", // convert to boolean
+        // showStockOut: formData.showStockOut === "Enable", // convert to boolean
+        // refundable: formData.refundable === "Yes", // convert to boolean
+        // Convert numeric strings to numbers
+        // buyingPrice: Number(formData.buyingPrice),
+        // sellingPrice: Number(formData.sellingPrice),
+        // maxPurchaseQuantity: Number(formData.maxPurchaseQuantity),
+        // lowStockWarning: Number(formData.lowStockWarning),
+      };
+
+      console.log("Submitting data:", submitData);
+
+      axiosInstance
+        .post("/products", submitData)
+        .then((response) => {
+          console.log("Product upload response:", response);
+          // alert("Product uploaded successfully");
+          onSubmit(submitData);
+        })
+        .catch((error) => {
+          console.error("Error uploading product:", error);
+          // alert("Failed to upload product");
+        });
     }
   };
 
@@ -267,12 +307,117 @@ const ProductForm: React.FC<AddProductFormProps> = ({
     }));
   };
 
+  // Image upload ref
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Image upload handler
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validate file type and size
+      const allowedTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+      ];
+      const maxSize = 5 * 1024 * 1024; // 5MB
+
+      if (!allowedTypes.includes(file.type)) {
+        setErrors((prev) => ({
+          ...prev,
+          images: "Invalid file type. Please upload JPEG, PNG, GIF, or WebP.",
+        }));
+        return;
+      }
+
+      if (file.size > maxSize) {
+        setErrors((prev) => ({
+          ...prev,
+          images: "File is too large. Maximum size is 5MB.",
+        }));
+        return;
+      }
+
+      // Create a FileReader to convert image to base64
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData((prev) => ({
+          ...prev,
+          images: reader.result as string,
+        }));
+        // Clear any previous image-related errors
+        setErrors((prev) => {
+          const newErrors = { ...prev };
+          delete newErrors.images;
+          return newErrors;
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Image removal handler
+  const handleRemoveImage = () => {
+    setFormData((prev) => ({
+      ...prev,
+      images: "",
+    }));
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   return (
     <div className="p-4">
       <form
         className="grid grid-cols-1 sm:grid-cols-2 gap-6"
         onSubmit={handleSubmit}
       >
+        {/* IMAGES */}
+        <div className="sm:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            PRODUCT IMAGE
+          </label>
+          <div className="flex items-center space-x-4">
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/jpeg,image/png,image/gif,image/webp"
+              onChange={handleImageUpload}
+              className="hidden"
+              id="image-upload"
+            />
+            <label
+              htmlFor="image-upload"
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 cursor-pointer"
+            >
+              Upload Image
+            </label>
+
+            {formData.images && (
+              <div className="flex items-center space-x-2">
+                <img
+                  src={formData.images}
+                  alt="Product"
+                  className="h-20 w-20 object-cover rounded"
+                />
+                <button
+                  type="button"
+                  onClick={handleRemoveImage}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  Remove
+                </button>
+              </div>
+            )}
+          </div>
+          {isSubmitted && errors.images && (
+            <p className="mt-2 text-sm text-red-600">{errors.images}</p>
+          )}
+        </div>
+
         {/* NAME */}
         <InputField
           label="NAME"
@@ -281,12 +426,12 @@ const ProductForm: React.FC<AddProductFormProps> = ({
           error={isSubmitted && errors.name ? errors.name : undefined}
         />
         {/* SKU */}
-        <InputField
+        {/* <InputField
           label="SKU"
           value={formData.sku}
           onChange={(value) => handleChange("sku", value)}
           error={isSubmitted && errors.sku ? errors.sku : undefined}
-        />
+        /> */}
         {/* CATEGORY INFO: GENDER*/}
         <RadioGroup
           label="GENDER"
@@ -300,13 +445,26 @@ const ProductForm: React.FC<AddProductFormProps> = ({
         />
 
         {/* CATEGORY INFO: CATEGORY */}
-        <SelectField
+        {/* <SelectField
           label="CATEGORY"
           value={selectedCategory}
           onChange={handleCategoryChange}
           options={
             selectedGender
               ? categories[selectedGender as Gender].map((cat) => ({
+                  value: cat.category,
+                  label: cat.category,
+                }))
+              : []
+          }
+        /> */}
+        <SelectField
+          label="CATEGORY"
+          value={selectedCategory}
+          onChange={handleCategoryChange}
+          options={
+            selectedGender
+              ? (categories[selectedGender as Gender] || []).map((cat) => ({
                   value: cat.category,
                   label: cat.category,
                 }))

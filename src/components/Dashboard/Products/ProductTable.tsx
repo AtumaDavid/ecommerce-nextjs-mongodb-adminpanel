@@ -11,6 +11,7 @@ import {
 } from "react-icons/fa";
 import { Product, ProductTableProps, SortField } from "./types/product";
 import Link from "next/link";
+// import axiosInstance from "@/lib/axiosInstance";
 // import { ProductTableProps, SortField } from "../types/product";
 
 interface ExtendedProductTableProps extends ProductTableProps {
@@ -90,20 +91,38 @@ const ProductTable: React.FC<ExtendedProductTableProps> = ({
         </thead>
         <tbody className="divide-y divide-gray-200">
           {products.map((product) => (
-            <tr key={product.id} className="hover:bg-gray-50">
+            <tr
+              key={`${product._id}-${product.name}`}
+              className="hover:bg-gray-50"
+            >
               <td className="px-1 py-1">
                 <div className="flex items-center gap-3">
-                  <img
-                    src={product.image}
+                  {/* <img
+                    src={product.images}
                     alt={product.name}
                     className="h-12 w-12 rounded-lg object-cover no-print"
-                  />
+                  /> */}
+                  {product.images ? (
+                    <img
+                      src={product.images}
+                      alt={product.name}
+                      className="h-12 w-12 rounded-lg object-cover no-print"
+                    />
+                  ) : (
+                    <div className="h-12 w-12 rounded-lg bg-gray-200 flex items-center justify-center no-print">
+                      <span className="text-gray-500">No Image</span>
+                    </div>
+                  )}
                   <span className="font-medium text-gray-900">
                     {product.name}
                   </span>
                 </div>
               </td>
-              <td className="px-4 py-3 text-gray-600">{product.category}</td>
+              <td className="px-4 py-3 text-gray-600">
+                {product.categoryInfo?.gender} {">"}
+                {product.categoryInfo?.category} {">"}
+                {product.categoryInfo?.subcategory} {""}
+              </td>
               <td className="px-4 py-3 text-gray-600">
                 {formatPrice(product.buyingPrice)}
               </td>

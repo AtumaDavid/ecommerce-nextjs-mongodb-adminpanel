@@ -8,6 +8,10 @@ type Variation = {
   price: string;
 };
 
+// interface VariationsProps {
+//   productSku: string; // Accept product SKU as a prop
+// }
+
 const Variations: React.FC = () => {
   const [variations, setVariations] = useState<Variation[]>([]);
   const [showModal, setShowModal] = useState(false);

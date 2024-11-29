@@ -10,12 +10,34 @@ import {
   SortField,
   SortOrder,
 } from "@/components/Dashboard/Products/types/product";
+import axiosInstance from "@/lib/axiosInstance";
+// import { useProducts } from "@/hooks/useProducts";
+// import axiosInstance from "@/lib/axiosInstance";
 import { createPrintStyle, exportToExcel } from "@/utils/exportUtils";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 
 const ITEMS_PER_PAGE = 10;
 
 const DashboardProduct = () => {
+  // useEffect(() => {
+  //   const data = axiosInstance.get("/products");
+  //   const productsData = data;
+  //   console.log(productsData);
+  // });
+
+  const fetchProducts = async () => {
+    try {
+      const response = await axiosInstance.get("/products");
+      console.log(response.data.data);
+      setProducts(response.data.data);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    }
+  };
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
   const [products, setProducts] = useState<Product[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -71,23 +93,26 @@ const DashboardProduct = () => {
     }).format(price);
   };
 
-  const handleAddProduct = (formData: ProductFormData) => {
+  const handleAddProduct = async (formData: ProductFormData) => {
     const newProduct: Product = {
-      id: Date.now(), // Unique ID
+      _id: Date.now(), // Unique ID
       name: formData.name,
-      image: `https://via.placeholder.com/80?text=${encodeURIComponent(
-        formData.name
-      )}`,
+      images:
+        formData.images ||
+        `https://via.placeholder.com/80?text=${encodeURIComponent(
+          formData.name
+        )}`,
       category: `${formData.categoryInfo.gender} - ${formData.categoryInfo.category} - ${formData.categoryInfo.subcategory}`,
+      categoryInfo: formData.categoryInfo,
       buyingPrice: parseFloat(formData.buyingPrice),
       sellingPrice: parseFloat(formData.sellingPrice),
       status: formData.status as "Active" | "Inactive",
       description: formData.description,
-      barcode: parseInt(formData.barcode, 10),
+      barcode: formData.barcode,
       tax: formData.tax as "No Vat" | "Vat-5" | "Vat-10" | "Vat-20",
-      canPurchasable: formData.canPurchasable.toString(),
-      showStockOut: formData.showStockOut.toString(),
-      refundable: formData.refundable.toString(),
+      canPurchasable: formData.canPurchasable,
+      showStockOut: formData.showStockOut,
+      refundable: formData.refundable,
       maxPurchaseQuantity: parseInt(formData.maxPurchaseQuantity).toString(),
       lowStockWarning: parseInt(formData.lowStockWarning).toString(),
       unit: formData.unit,
@@ -95,24 +120,31 @@ const DashboardProduct = () => {
     };
 
     setProducts((prevProducts) => [...prevProducts, newProduct]);
+
     setIsSidebarOpen(false);
   };
 
-  const handleUpdateProduct = (formData: ProductFormData) => {
+  const handleUpdateProduct = async (formData: ProductFormData) => {
     if (editingProduct) {
       const updatedProduct: Product = {
         ...editingProduct,
         name: formData.name,
+        images:
+          formData.images ||
+          `https://via.placeholder.com/80?text=${encodeURIComponent(
+            formData.name
+          )}`,
         category: `${formData.categoryInfo.gender} - ${formData.categoryInfo.category} - ${formData.categoryInfo.subcategory}`,
+        categoryInfo: formData.categoryInfo,
         buyingPrice: parseFloat(formData.buyingPrice),
         sellingPrice: parseFloat(formData.sellingPrice),
         status: formData.status as "Active" | "Inactive",
         description: formData.description,
-        barcode: parseInt(formData.barcode, 10),
+        barcode: formData.barcode,
         tax: formData.tax as "No Vat" | "Vat-5" | "Vat-10" | "Vat-20",
-        canPurchasable: formData.canPurchasable.toString(),
-        showStockOut: formData.showStockOut.toString(),
-        refundable: formData.refundable.toString(),
+        canPurchasable: formData.canPurchasable,
+        showStockOut: formData.showStockOut,
+        refundable: formData.refundable,
         maxPurchaseQuantity: parseInt(formData.maxPurchaseQuantity).toString(),
         lowStockWarning: parseInt(formData.lowStockWarning).toString(),
         unit: formData.unit,
@@ -121,9 +153,10 @@ const DashboardProduct = () => {
 
       setProducts((prevProducts) =>
         prevProducts.map((p) =>
-          p.id === editingProduct.id ? updatedProduct : p
+          p._id === editingProduct._id ? updatedProduct : p
         )
       );
+
       setIsSidebarOpen(false);
       setEditingProduct(undefined);
     }
@@ -223,3 +256,13 @@ const DashboardProduct = () => {
 };
 
 export default DashboardProduct;
+
+// export async function getServerSideProps(req, res) {
+//   const products = await fetch("http://localhost:4000/api/products");
+//   const data = await products.json;
+//   console.log(data);
+
+//   return {
+//     props: {},
+//   };
+// }
