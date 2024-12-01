@@ -112,11 +112,6 @@ const ProductTable: React.FC<ExtendedProductTableProps> = ({
               </td>
               <td className="px-1 py-1">
                 <div className="flex items-center gap-3">
-                  {/* <img
-                    src={product.images}
-                    alt={product.name}
-                    className="h-12 w-12 rounded-lg object-cover no-print"
-                  /> */}
                   {product.images ? (
                     <img
                       src={product.images}
@@ -167,7 +162,6 @@ const ProductTable: React.FC<ExtendedProductTableProps> = ({
                   </Link>
                   <button
                     className="text-green-500 hover:text-green-700"
-                    // onClick={() => onEditProduct && onEditProduct(product)}
                     onClick={() => editProduct(product?._id)}
                   >
                     <FaEdit className="w-4 h-4" />
@@ -189,12 +183,3 @@ const ProductTable: React.FC<ExtendedProductTableProps> = ({
 };
 
 export default ProductTable;
-
-{
-  /* <Link
-  href={`/dashboard/products/edit/${product._id}`}
-  className="text-blue-500 hover:text-blue-700"
->
-  <FaEye className="w-4 h-4" />
-</Link>; */
-}
