@@ -43,6 +43,15 @@ const ProductTable: React.FC<ExtendedProductTableProps> = ({
           <tr>
             <th
               className="px-4 py-3 text-left text-sm font-medium text-gray-600 cursor-pointer"
+              onClick={() => onSort("createdAt")} // Add sorting for createdAt
+            >
+              <div className="flex items-center gap-2">
+                CREATED AT
+                <span className="no-print">{getSortIcon("createdAt")}</span>
+              </div>
+            </th>
+            <th
+              className="px-4 py-3 text-left text-sm font-medium text-gray-600 cursor-pointer"
               onClick={() => onSort("name")}
             >
               <div className="flex items-center gap-2">
@@ -52,11 +61,11 @@ const ProductTable: React.FC<ExtendedProductTableProps> = ({
             </th>
             <th
               className="px-4 py-3 text-left text-sm font-medium text-gray-600 cursor-pointer"
-              onClick={() => onSort("category")}
+              onClick={() => onSort("categoryInfo")}
             >
               <div className="flex items-center gap-2">
                 CATEGORY INFO
-                <span className="no-print">{getSortIcon("category")}</span>
+                <span className="no-print">{getSortIcon("categoryInfo")}</span>
               </div>
             </th>
             <th
@@ -97,6 +106,10 @@ const ProductTable: React.FC<ExtendedProductTableProps> = ({
               key={`${product._id}-${product.name}`}
               className="hover:bg-gray-50"
             >
+              <td className="px-4 py-3 text-gray-600">
+                {new Date(product.createdAt).toLocaleDateString()}{" "}
+                {/* Format the date */}
+              </td>
               <td className="px-1 py-1">
                 <div className="flex items-center gap-3">
                   {/* <img

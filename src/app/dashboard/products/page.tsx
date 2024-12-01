@@ -21,28 +21,40 @@ const DashboardProduct = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortField, setSortField] = useState<SortField>("name");
+  const [sortField, setSortField] = useState<SortField>("createdAt");
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
   const [editingProduct, setEditingProduct] = useState<Product | undefined>(
     undefined
   );
-  // const [product, setProduct] = useState([]);
 
-  // Sort and filter products
+  // SORT AND FILTER PRODUCTS
   const filteredAndSortedProducts = useMemo(() => {
     let filtered = [...products];
 
     if (searchQuery) {
-      filtered = filtered.filter(
-        (product) =>
-          product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          product.category.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+      filtered = filtered.filter((product) => {
+        const productName = product.name || ""; // Default to an empty string if undefined
+        const productCategory = product.category || ""; // Default to an empty string if undefined
+        return (
+          productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          productCategory.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+      });
     }
 
     filtered.sort((a, b) => {
-      const aValue = a[sortField];
-      const bValue = b[sortField];
+      // const aValue = a[sortField];
+      // const bValue = b[sortField];
+      const aValue =
+        sortField === "categoryInfo" ? a.categoryInfo?.category : a[sortField];
+      const bValue =
+        sortField === "categoryInfo" ? b.categoryInfo?.category : b[sortField];
+
+      if (sortField === "createdAt") {
+        return sortOrder === "asc"
+          ? new Date(aValue).getTime() - new Date(bValue).getTime()
+          : new Date(bValue).getTime() - new Date(aValue).getTime();
+      }
 
       if (typeof aValue === "string" && typeof bValue === "string") {
         return sortOrder === "asc"
@@ -58,7 +70,7 @@ const DashboardProduct = () => {
     return filtered;
   }, [products, searchQuery, sortField, sortOrder]);
 
-  // Pagination calculations
+  // PAGINATION CALCULATIONS
   const totalPages = Math.ceil(
     filteredAndSortedProducts.length / ITEMS_PER_PAGE
   );
@@ -104,11 +116,20 @@ const DashboardProduct = () => {
     setCurrentPage(page);
   };
 
+  // FETCH PRODUCT
   const fetchProducts = async () => {
     try {
       const response = await axiosInstance.get("/products");
-      console.log(response.data.data);
-      setProducts(response.data.data);
+      // console.log(response.data.data);
+      const sortedProducts = response.data.data.sort(
+        (a: Product, b: Product) => {
+          return (
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+        }
+      );
+      // setProducts(response.data.data);
+      setProducts(sortedProducts);
     } catch (error) {
       console.error("Error fetching products:", error);
     }
@@ -121,11 +142,10 @@ const DashboardProduct = () => {
   const handleAddProduct = async (productData: ProductFormData) => {
     try {
       const response = await axiosInstance.post("/products", productData);
-      console.log("Product added:", response.data);
-
+      // console.log("Product added:", response.data);
+      setProducts((prevProducts) => [response.data, ...prevProducts]);
       await fetchProducts();
       setIsSidebarOpen(false);
-      setProducts((prevProducts) => [...prevProducts, response.data]);
     } catch (error) {
       console.error("Error adding product:", error);
     }
@@ -144,28 +164,6 @@ const DashboardProduct = () => {
       alert("Failed to delete product");
     }
   };
-
-  // const handleEditProduct = async (_id: number) => {
-  //   // alert(_id);
-  //   axiosInstance.get(`/products/${_id}`).then((data) => {
-  //     if (data?.status) {
-  //       setEditingProduct(data?.data);
-  //       console.log(data?.data);
-  //       setIsSidebarOpen(true);
-  //     }
-  //   });
-  // };
-  // const handleEditProduct = async (_id: number) => {
-  //   try {
-  //     const response = await axiosInstance.get(`/products/${_id}`);
-  //     if (response.data?.status && response.data.data) {
-  //       setEditingProduct(response.data.data); // Pass the actual product data
-  //       setIsSidebarOpen(true);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching product details:", error);
-  //   }
-  // };
 
   // UPDATE PRODUCT
   const handleUpdateProduct = async (productData: ProductFormData) => {
@@ -249,14 +247,6 @@ const DashboardProduct = () => {
         }}
         title={editingProduct ? "Edit Product" : "Add New Product"}
       >
-        {/* <AddProductForm
-          onSubmit={
-            editingProduct
-              ? () => handleEditProduct(editingProduct._id)
-              : handleAddProduct
-          }
-          initialData={editingProduct}
-        /> */}
         <AddProductForm
           onSubmit={
             editingProduct

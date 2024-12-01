@@ -20,12 +20,18 @@ export interface Product {
   unit: string;
   weight?: string;
   tags: string[];
-  // createdAt: Date;
+  createdAt: Date;
 }
 
 export type SortField = keyof Pick<
   Product,
-  "name" | "category" | "buyingPrice" | "sellingPrice" | "status"
+  | "name"
+  | "category"
+  | "buyingPrice"
+  | "sellingPrice"
+  | "status"
+  | "createdAt"
+  | "categoryInfo"
 >;
 
 export type SortOrder = "asc" | "desc";
@@ -86,6 +92,7 @@ export interface ProductFormData {
   weight?: string;
   tags: string[];
   description: string;
+  createdAt?: Date;
 }
 
 interface CategoryInfo {

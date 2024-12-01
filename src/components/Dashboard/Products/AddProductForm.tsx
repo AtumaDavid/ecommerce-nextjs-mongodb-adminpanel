@@ -111,9 +111,6 @@ const ProductForm: React.FC<AddProductFormProps> = ({
     //   ? initialData.id.toString()
     //   : Math.floor(Math.random() * 100000).toString(),
     categoryInfo: {
-      // gender: initialData?.category?.split(" - ")[0] || "",
-      // category: initialData?.category?.split(" - ")[1] || "",
-      // subcategory: initialData?.category?.split(" - ")[2] || "",
       gender: initialData?.categoryInfo?.gender || "",
       category: initialData?.categoryInfo?.category || "",
       subcategory: initialData?.categoryInfo?.subcategory || "",
@@ -255,18 +252,6 @@ const ProductForm: React.FC<AddProductFormProps> = ({
       "lowStockWarning",
     ];
 
-    // requiredFields.forEach((field) => {
-    //   if (field === "categoryInfo") {
-    //     // Specific validation for category info
-    //     const { gender, category, subcategory } = formData.categoryInfo;
-    //     if (!gender) newErrors[field] = "Gender is required";
-    //     if (!category) newErrors[field] = "Category is required";
-    //     if (!subcategory) newErrors[field] = "Subcategory is required";
-    //   } else if (!formData[field]) {
-    //     newErrors[field] = "This field is required";
-    //   }
-    // });
-
     // return newErrors;
     requiredFields.forEach((field) => {
       if (field === "categoryInfo") {
@@ -389,6 +374,7 @@ const ProductForm: React.FC<AddProductFormProps> = ({
     // Prepare product data for submission
     const productData: ProductFormData = {
       ...formData,
+      createdAt: new Date(),
     };
 
     // Call the onSubmit prop function with the product data
