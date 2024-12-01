@@ -67,6 +67,7 @@ export interface SidebarProps {
 
 //  PRODUCT FORM
 export interface ProductFormData {
+  _id?: number;
   images: string;
   name: string;
   // sku: string;

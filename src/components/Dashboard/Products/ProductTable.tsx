@@ -9,13 +9,13 @@ import {
   FaEdit,
   FaTrash,
 } from "react-icons/fa";
-import { Product, ProductTableProps, SortField } from "./types/product";
+import { ProductTableProps, SortField } from "./types/product";
 import Link from "next/link";
-// import axiosInstance from "@/lib/axiosInstance";
-// import { ProductTableProps, SortField } from "../types/product";
 
 interface ExtendedProductTableProps extends ProductTableProps {
-  onEditProduct?: (product: Product) => void;
+  // onEditProduct?: (product: Product) => void;
+  editProduct: (_id: number) => void;
+  DeleteProduct: (_id: number) => void;
 }
 
 const ProductTable: React.FC<ExtendedProductTableProps> = ({
@@ -23,7 +23,9 @@ const ProductTable: React.FC<ExtendedProductTableProps> = ({
   sortConfig,
   onSort,
   formatPrice,
-  onEditProduct,
+  editProduct,
+  // onEditProduct,
+  DeleteProduct,
 }) => {
   const getSortIcon = (field: SortField) => {
     if (sortConfig.field !== field) return <FaSort className="w-3 h-3" />;
@@ -152,11 +154,15 @@ const ProductTable: React.FC<ExtendedProductTableProps> = ({
                   </Link>
                   <button
                     className="text-green-500 hover:text-green-700"
-                    onClick={() => onEditProduct && onEditProduct(product)}
+                    // onClick={() => onEditProduct && onEditProduct(product)}
+                    onClick={() => editProduct(product?._id)}
                   >
                     <FaEdit className="w-4 h-4" />
                   </button>
-                  <button className="text-red-500 hover:text-red-700">
+                  <button
+                    className="text-red-500 hover:text-red-700"
+                    onClick={() => DeleteProduct(product._id)}
+                  >
                     <FaTrash className="w-4 h-4" />
                   </button>
                 </div>
@@ -170,3 +176,12 @@ const ProductTable: React.FC<ExtendedProductTableProps> = ({
 };
 
 export default ProductTable;
+
+{
+  /* <Link
+  href={`/dashboard/products/edit/${product._id}`}
+  className="text-blue-500 hover:text-blue-700"
+>
+  <FaEye className="w-4 h-4" />
+</Link>; */
+}

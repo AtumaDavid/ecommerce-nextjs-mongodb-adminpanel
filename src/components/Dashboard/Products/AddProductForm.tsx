@@ -1,11 +1,10 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import InputField from "./ProductsForm/InputField";
 import SelectField from "./ProductsForm/SelectField";
 import RadioGroup from "./ProductsForm/RadioGroup";
 import TagInput from "./ProductsForm/TagInput";
 import TextArea from "./ProductsForm/TextArea";
 import { Product, ProductFormData } from "./types/product";
-import axiosInstance from "@/lib/axiosInstance";
 
 type Gender = "men" | "women" | "juniors";
 
@@ -97,16 +96,27 @@ const ProductForm: React.FC<AddProductFormProps> = ({
   onSubmit,
   initialData,
 }) => {
+  const [errors, setErrors] = useState<{
+    [key in keyof ProductFormData]?: string;
+  }>({});
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [tagInput, setTagInput] = useState("");
+
+  // console.log("Initial data received:", initialData);
   const [formData, setFormData] = useState<ProductFormData>({
+    _id: initialData?._id || undefined, // Add this line
     name: initialData?.name || "",
     images: initialData?.images || "",
     // sku: initialData
     //   ? initialData.id.toString()
     //   : Math.floor(Math.random() * 100000).toString(),
     categoryInfo: {
-      gender: initialData?.category?.split(" - ")[0] || "",
-      category: initialData?.category?.split(" - ")[1] || "",
-      subcategory: initialData?.category?.split(" - ")[2] || "",
+      // gender: initialData?.category?.split(" - ")[0] || "",
+      // category: initialData?.category?.split(" - ")[1] || "",
+      // subcategory: initialData?.category?.split(" - ")[2] || "",
+      gender: initialData?.categoryInfo?.gender || "",
+      category: initialData?.categoryInfo?.category || "",
+      subcategory: initialData?.categoryInfo?.subcategory || "",
     },
     barcode: initialData?.barcode || "",
     buyingPrice: initialData?.buyingPrice?.toString() || "",
@@ -123,27 +133,48 @@ const ProductForm: React.FC<AddProductFormProps> = ({
     tags: initialData?.tags || [],
     description: initialData?.description || "",
   });
-  console.log("initial data:", initialData);
 
-  const [errors, setErrors] = useState<{
-    [key in keyof ProductFormData]?: string;
-  }>({});
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [tagInput, setTagInput] = useState("");
-  // const [selectedGender, setSelectedGender] = useState<Gender | "">("");
-  // const [selectedCategory, setSelectedCategory] = useState<string>("");
-  // const [selectedSubcategory, setSelectedSubcategory] = useState<string>("");
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        _id: initialData?._id || undefined, // Add this line
+        name: initialData.name || "",
+        images: initialData.images || "",
+        categoryInfo: {
+          gender: initialData.categoryInfo.gender || "",
+          category: initialData.categoryInfo.category || "",
+          subcategory: initialData.categoryInfo.subcategory || "",
+        },
+        barcode: initialData.barcode || "",
+        buyingPrice: initialData.buyingPrice?.toString() || "",
+        sellingPrice: initialData.sellingPrice?.toString() || "",
+        tax: initialData?.tax || "No Vat",
+        status: initialData?.status || "Active", // Default to Active
+        canPurchasable: initialData?.canPurchasable || "Yes", // Default to Yes
+        showStockOut: initialData?.showStockOut || "Enable", // Default to Enable
+        refundable: initialData?.refundable || "Yes", // Default to Yes
+        maxPurchaseQuantity: initialData?.maxPurchaseQuantity || "1",
+        lowStockWarning: initialData?.lowStockWarning || "0",
+        unit: initialData?.unit || "piece(pc)",
+        weight: initialData?.weight || "",
+        tags: initialData?.tags || [],
+        description: initialData?.description || "",
+      });
+    }
+  }, [initialData]); // Only run when initialData changes
+
+  // console.log("initial data:", initialData);
   const [selectedGender, setSelectedGender] = useState<string>(
-    initialData?.categoryInfo?.category?.split(" - ")[0] || ""
+    initialData?.categoryInfo?.gender || ""
   );
   const [selectedCategory, setSelectedCategory] = useState<string>(
-    initialData?.categoryInfo?.category?.split(" - ")[1] || ""
+    initialData?.categoryInfo?.category || ""
   );
-  // const [selectedSubcategory, setSelectedSubcategory] = useState<string>("");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>(
-    initialData?.categoryInfo?.category?.split(" - ")[2] || ""
+    initialData?.categoryInfo?.subcategory || ""
   );
 
+  // HANDLE GENDER CHANGE
   const handleGenderChange = (gender: string) => {
     if (gender === "men" || gender === "women" || gender === "juniors") {
       setSelectedGender(gender as Gender);
@@ -224,70 +255,32 @@ const ProductForm: React.FC<AddProductFormProps> = ({
       "lowStockWarning",
     ];
 
+    // requiredFields.forEach((field) => {
+    //   if (field === "categoryInfo") {
+    //     // Specific validation for category info
+    //     const { gender, category, subcategory } = formData.categoryInfo;
+    //     if (!gender) newErrors[field] = "Gender is required";
+    //     if (!category) newErrors[field] = "Category is required";
+    //     if (!subcategory) newErrors[field] = "Subcategory is required";
+    //   } else if (!formData[field]) {
+    //     newErrors[field] = "This field is required";
+    //   }
+    // });
+
+    // return newErrors;
     requiredFields.forEach((field) => {
       if (field === "categoryInfo") {
-        // Specific validation for category info
         const { gender, category, subcategory } = formData.categoryInfo;
-        if (!gender) newErrors[field] = "Gender is required";
-        if (!category) newErrors[field] = "Category is required";
-        if (!subcategory) newErrors[field] = "Subcategory is required";
+        if (!gender) newErrors.categoryInfo = "Gender is required";
+        else if (!category) newErrors.categoryInfo = "Category is required";
+        else if (!subcategory)
+          newErrors.categoryInfo = "Subcategory is required";
       } else if (!formData[field]) {
         newErrors[field] = "This field is required";
       }
     });
 
     return newErrors;
-  };
-
-  // HANDLE SUBMIT FUNCTION
-  // const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-  //   e.preventDefault();
-  //   setIsSubmitted(true);
-
-  //   const newErrors = validateForm();
-  //   setErrors(newErrors);
-
-  //   if (Object.keys(newErrors).length === 0) {
-  //     console.log("Form submitted:", formData);
-  //     onSubmit(formData); // Pass data to parent
-  //   }
-  // };
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    setIsSubmitted(true);
-
-    const newErrors = validateForm();
-    setErrors(newErrors);
-
-    if (Object.keys(newErrors).length === 0) {
-      // Convert string values to appropriate types
-      const submitData = {
-        ...formData,
-        // canPurchasable: formData.canPurchasable === "Yes", // convert to boolean
-        // showStockOut: formData.showStockOut === "Enable", // convert to boolean
-        // refundable: formData.refundable === "Yes", // convert to boolean
-        // Convert numeric strings to numbers
-        // buyingPrice: Number(formData.buyingPrice),
-        // sellingPrice: Number(formData.sellingPrice),
-        // maxPurchaseQuantity: Number(formData.maxPurchaseQuantity),
-        // lowStockWarning: Number(formData.lowStockWarning),
-      };
-
-      console.log("Submitting data:", submitData);
-
-      axiosInstance
-        .post("/products", submitData)
-        .then((response) => {
-          console.log("Product upload response:", response);
-          // alert("Product uploaded successfully");
-          onSubmit(submitData);
-        })
-        .catch((error) => {
-          console.error("Error uploading product:", error);
-          // alert("Failed to upload product");
-        });
-    }
   };
 
   const handleAddTag = (tag: string) => {
@@ -369,6 +362,42 @@ const ProductForm: React.FC<AddProductFormProps> = ({
     }
   };
 
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    console.log("Form submission initiated."); // Debugging log
+    console.log("Product _id:", formData._id); // Add this line to debug
+    setIsSubmitted(true); // Set the submitted state to true
+
+    // Log full form data for debugging
+    console.log("Full Form Data:", formData);
+
+    // Validate the form
+    const validationErrors = validateForm();
+    if (Object.keys(validationErrors).length > 0) {
+      console.log("Validation errors found:", validationErrors); // Debugging log
+      setErrors(validationErrors); // Set errors if validation fails
+      return; // Stop the submission process
+    }
+
+    // Log the data being submitted
+    console.log("Submitting product data:", {
+      ...formData,
+      _id: initialData?._id, // Include the ID if available
+    });
+
+    // Prepare product data for submission
+    const productData: ProductFormData = {
+      ...formData,
+    };
+
+    // Call the onSubmit prop function with the product data
+    onSubmit(productData);
+
+    // Optionally, you can reset the form or show a success message
+    console.log("Product data submitted:", productData);
+  };
+
   return (
     <div className="p-4">
       <form
@@ -445,19 +474,6 @@ const ProductForm: React.FC<AddProductFormProps> = ({
         />
 
         {/* CATEGORY INFO: CATEGORY */}
-        {/* <SelectField
-          label="CATEGORY"
-          value={selectedCategory}
-          onChange={handleCategoryChange}
-          options={
-            selectedGender
-              ? categories[selectedGender as Gender].map((cat) => ({
-                  value: cat.category,
-                  label: cat.category,
-                }))
-              : []
-          }
-        /> */}
         <SelectField
           label="CATEGORY"
           value={selectedCategory}

@@ -11,33 +11,12 @@ import {
   SortOrder,
 } from "@/components/Dashboard/Products/types/product";
 import axiosInstance from "@/lib/axiosInstance";
-// import { useProducts } from "@/hooks/useProducts";
-// import axiosInstance from "@/lib/axiosInstance";
 import { createPrintStyle, exportToExcel } from "@/utils/exportUtils";
 import React, { useState, useMemo, useEffect } from "react";
 
 const ITEMS_PER_PAGE = 10;
 
 const DashboardProduct = () => {
-  // useEffect(() => {
-  //   const data = axiosInstance.get("/products");
-  //   const productsData = data;
-  //   console.log(productsData);
-  // });
-
-  const fetchProducts = async () => {
-    try {
-      const response = await axiosInstance.get("/products");
-      console.log(response.data.data);
-      setProducts(response.data.data);
-    } catch (error) {
-      console.error("Error fetching products:", error);
-    }
-  };
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
   const [products, setProducts] = useState<Product[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -47,6 +26,7 @@ const DashboardProduct = () => {
   const [editingProduct, setEditingProduct] = useState<Product | undefined>(
     undefined
   );
+  // const [product, setProduct] = useState([]);
 
   // Sort and filter products
   const filteredAndSortedProducts = useMemo(() => {
@@ -93,80 +73,6 @@ const DashboardProduct = () => {
     }).format(price);
   };
 
-  const handleAddProduct = async (formData: ProductFormData) => {
-    const newProduct: Product = {
-      _id: Date.now(), // Unique ID
-      name: formData.name,
-      images:
-        formData.images ||
-        `https://via.placeholder.com/80?text=${encodeURIComponent(
-          formData.name
-        )}`,
-      category: `${formData.categoryInfo.gender} - ${formData.categoryInfo.category} - ${formData.categoryInfo.subcategory}`,
-      categoryInfo: formData.categoryInfo,
-      buyingPrice: parseFloat(formData.buyingPrice),
-      sellingPrice: parseFloat(formData.sellingPrice),
-      status: formData.status as "Active" | "Inactive",
-      description: formData.description,
-      barcode: formData.barcode,
-      tax: formData.tax as "No Vat" | "Vat-5" | "Vat-10" | "Vat-20",
-      canPurchasable: formData.canPurchasable,
-      showStockOut: formData.showStockOut,
-      refundable: formData.refundable,
-      maxPurchaseQuantity: parseInt(formData.maxPurchaseQuantity).toString(),
-      lowStockWarning: parseInt(formData.lowStockWarning).toString(),
-      unit: formData.unit,
-      tags: formData.tags || [],
-    };
-
-    setProducts((prevProducts) => [...prevProducts, newProduct]);
-
-    setIsSidebarOpen(false);
-  };
-
-  const handleUpdateProduct = async (formData: ProductFormData) => {
-    if (editingProduct) {
-      const updatedProduct: Product = {
-        ...editingProduct,
-        name: formData.name,
-        images:
-          formData.images ||
-          `https://via.placeholder.com/80?text=${encodeURIComponent(
-            formData.name
-          )}`,
-        category: `${formData.categoryInfo.gender} - ${formData.categoryInfo.category} - ${formData.categoryInfo.subcategory}`,
-        categoryInfo: formData.categoryInfo,
-        buyingPrice: parseFloat(formData.buyingPrice),
-        sellingPrice: parseFloat(formData.sellingPrice),
-        status: formData.status as "Active" | "Inactive",
-        description: formData.description,
-        barcode: formData.barcode,
-        tax: formData.tax as "No Vat" | "Vat-5" | "Vat-10" | "Vat-20",
-        canPurchasable: formData.canPurchasable,
-        showStockOut: formData.showStockOut,
-        refundable: formData.refundable,
-        maxPurchaseQuantity: parseInt(formData.maxPurchaseQuantity).toString(),
-        lowStockWarning: parseInt(formData.lowStockWarning).toString(),
-        unit: formData.unit,
-        tags: formData.tags || [],
-      };
-
-      setProducts((prevProducts) =>
-        prevProducts.map((p) =>
-          p._id === editingProduct._id ? updatedProduct : p
-        )
-      );
-
-      setIsSidebarOpen(false);
-      setEditingProduct(undefined);
-    }
-  };
-
-  const handleEditProduct = (product: Product) => {
-    setEditingProduct(product);
-    setIsSidebarOpen(true);
-  };
-
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");
@@ -198,6 +104,104 @@ const DashboardProduct = () => {
     setCurrentPage(page);
   };
 
+  const fetchProducts = async () => {
+    try {
+      const response = await axiosInstance.get("/products");
+      console.log(response.data.data);
+      setProducts(response.data.data);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    }
+  };
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  // ADD PRODUCT
+  const handleAddProduct = async (productData: ProductFormData) => {
+    try {
+      const response = await axiosInstance.post("/products", productData);
+      console.log("Product added:", response.data);
+
+      await fetchProducts();
+      setIsSidebarOpen(false);
+      setProducts((prevProducts) => [...prevProducts, response.data]);
+    } catch (error) {
+      console.error("Error adding product:", error);
+    }
+  };
+
+  // DELETE
+  const deleteProduct = async (_id: number) => {
+    try {
+      const response = await axiosInstance.delete(`/products/${_id}`);
+      if (response.status === 200) {
+        alert("product deleted successfully");
+        fetchProducts();
+      }
+    } catch (error) {
+      console.error("Failed to delete product:", error);
+      alert("Failed to delete product");
+    }
+  };
+
+  // const handleEditProduct = async (_id: number) => {
+  //   // alert(_id);
+  //   axiosInstance.get(`/products/${_id}`).then((data) => {
+  //     if (data?.status) {
+  //       setEditingProduct(data?.data);
+  //       console.log(data?.data);
+  //       setIsSidebarOpen(true);
+  //     }
+  //   });
+  // };
+  // const handleEditProduct = async (_id: number) => {
+  //   try {
+  //     const response = await axiosInstance.get(`/products/${_id}`);
+  //     if (response.data?.status && response.data.data) {
+  //       setEditingProduct(response.data.data); // Pass the actual product data
+  //       setIsSidebarOpen(true);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching product details:", error);
+  //   }
+  // };
+
+  // UPDATE PRODUCT
+  const handleUpdateProduct = async (productData: ProductFormData) => {
+    try {
+      const response = await axiosInstance.put(
+        `/products/${productData._id}`,
+        productData
+      );
+      console.log("Product updated:", response.data);
+
+      // Update the products state with the updated product
+      setProducts((prevProducts) =>
+        prevProducts.map((product) =>
+          product._id === response.data._id ? response.data : product
+        )
+      );
+      setIsSidebarOpen(false);
+      setEditingProduct(undefined); // Reset editing product
+      fetchProducts();
+    } catch (error) {
+      console.error("Error updating product:", error);
+    }
+  };
+
+  // EDIT PRODUCT
+  const handleEditProduct = async (_id: number) => {
+    try {
+      const response = await axiosInstance.get(`/products/${_id}`);
+      if (response.data?.status && response.data.data) {
+        setEditingProduct(response.data.data); // Pass the actual product data
+        setIsSidebarOpen(true);
+      }
+    } catch (error) {
+      console.error("Error fetching product details:", error);
+    }
+  };
   return (
     <div className="container mx-auto">
       <div className="text-xl font-medium text-gray-600 p-2">
@@ -222,7 +226,9 @@ const DashboardProduct = () => {
           sortConfig={{ field: sortField, order: sortOrder }}
           onSort={handleSort}
           formatPrice={formatPrice}
-          onEditProduct={handleEditProduct}
+          // onEditProduct={handleEditProduct}
+          editProduct={handleEditProduct}
+          DeleteProduct={deleteProduct}
         />
 
         <Pagination
@@ -237,17 +243,26 @@ const DashboardProduct = () => {
 
       <SidebarForm
         isOpen={isSidebarOpen}
-        // onClose={() => setIsSidebarOpen(false)}
         onClose={() => {
           setIsSidebarOpen(false);
           setEditingProduct(undefined);
         }}
-        // title="Add New Product"
         title={editingProduct ? "Edit Product" : "Add New Product"}
       >
-        {/* <AddProductForm onSubmit={handleAddProduct} /> */}
+        {/* <AddProductForm
+          onSubmit={
+            editingProduct
+              ? () => handleEditProduct(editingProduct._id)
+              : handleAddProduct
+          }
+          initialData={editingProduct}
+        /> */}
         <AddProductForm
-          onSubmit={editingProduct ? handleUpdateProduct : handleAddProduct}
+          onSubmit={
+            editingProduct
+              ? handleUpdateProduct // Use the new update function
+              : handleAddProduct
+          }
           initialData={editingProduct}
         />
       </SidebarForm>
@@ -256,13 +271,3 @@ const DashboardProduct = () => {
 };
 
 export default DashboardProduct;
-
-// export async function getServerSideProps(req, res) {
-//   const products = await fetch("http://localhost:4000/api/products");
-//   const data = await products.json;
-//   console.log(data);
-
-//   return {
-//     props: {},
-//   };
-// }
