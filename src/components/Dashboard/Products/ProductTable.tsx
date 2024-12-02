@@ -153,8 +153,9 @@ const ProductTable: React.FC<ExtendedProductTableProps> = ({
               <td className="px-4 py-3 no-print">
                 <div className="flex gap-3">
                   <Link
-                    href={"/dashboard/products/edit/1"}
-                    as={`/dashboard/products/edit/${1}`}
+                    // href={"/dashboard/products/edit/1"}
+                    // as={`/dashboard/products/edit/${1}`}
+                    href={`/dashboard/products/view/${product?._id}`}
                     className="text-blue-500 hover:text-blue-700 "
                   >
                     {/* <h4 className="hidden ">View</h4> */}

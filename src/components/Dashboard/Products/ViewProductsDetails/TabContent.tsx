@@ -9,15 +9,16 @@ import ShippingAndReturn from "./information/ShippingAndReturn";
 
 interface TabContentProps {
   activeTab: ProductTabName;
+  productId: string | null;
 }
 
-const TabContent: React.FC<TabContentProps> = ({ activeTab }) => {
+const TabContent: React.FC<TabContentProps> = ({ activeTab, productId }) => {
   const renderDefaultContent = () => {
     switch (activeTab) {
       case "Information":
-        return <Information />;
+        return <Information productId={productId} />;
       case "Images":
-        return <ProductGallery />;
+        return <ProductGallery productId={productId} />;
       case "Variation":
         return <Variations />;
       case "Offer":

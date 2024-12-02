@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import axiosInstance from "@/lib/axiosInstance";
+import React, { useEffect, useState } from "react";
 import { FaPlus, FaTimes } from "react-icons/fa";
 
 type ImageProps = {
@@ -7,9 +8,37 @@ type ImageProps = {
   alt: string;
 };
 
-const ProductGallery: React.FC = () => {
+interface ProductGalleryProps {
+  productId: string | null;
+}
+
+const ProductGallery: React.FC<ProductGalleryProps> = ({ productId }) => {
   const [images, setImages] = useState<ImageProps[]>([]);
   const [selectedImage, setSelectedImage] = useState<ImageProps | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchImages = async () => {
+      try {
+        if (!productId) {
+          throw new Error("No product ID provided");
+        }
+
+        const response = await axiosInstance.get(`/products/${productId}`);
+        console.log(response.data);
+
+        setImages(response.data.data);
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching images:", err);
+        setError("Failed to load images.");
+        setLoading(false);
+      }
+    };
+
+    fetchImages();
+  }, [productId]);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -41,6 +70,14 @@ const ProductGallery: React.FC = () => {
   const handleImageClick = (image: ImageProps) => {
     setSelectedImage(image);
   };
+
+  if (loading) {
+    return <div>Loading images...</div>;
+  }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
 
   return (
     <div className="flex justify-center items-center">
