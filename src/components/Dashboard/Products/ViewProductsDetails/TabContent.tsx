@@ -5,6 +5,7 @@ import ProductGallery from "./information/ProductGallery";
 import Variations from "./information/Variation";
 import OfferForm from "./information/OfferForm";
 import ShippingAndReturn from "./information/ShippingAndReturn";
+import SEOForm from "./SEOForm";
 // import Offers from "@/app/offers/page";
 
 interface TabContentProps {
@@ -22,9 +23,11 @@ const TabContent: React.FC<TabContentProps> = ({ activeTab, productId }) => {
       case "Variation":
         return <Variations />;
       case "Offer":
-        return <OfferForm />;
+        return <OfferForm productId={productId} />;
       case "Shipping & Return":
-        return <ShippingAndReturn />;
+        return <ShippingAndReturn productId={productId} />;
+      case "SEO":
+        return <SEOForm />;
       default:
         return (
           <p className="text-gray-500">{activeTab} content goes here...</p>

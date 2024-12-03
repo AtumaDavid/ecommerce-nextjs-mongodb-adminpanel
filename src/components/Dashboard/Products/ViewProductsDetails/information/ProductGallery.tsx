@@ -26,9 +26,9 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({ productId }) => {
         }
 
         const response = await axiosInstance.get(`/products/${productId}`);
-        console.log(response.data);
+        console.log(response.data.data.images);
 
-        setImages(response.data.data);
+        // setImages(response.data.data.images);
         setLoading(false);
       } catch (err) {
         console.error("Error fetching images:", err);

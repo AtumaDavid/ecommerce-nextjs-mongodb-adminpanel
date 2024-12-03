@@ -89,15 +89,6 @@ const Information: React.FC<InformationProps> = ({ productId }) => {
     return <div>No product found.</div>;
   }
   const productInfoLeft = [
-    // { label: "Name", value: "Snapback Hat" },
-    // { label: "Category", value: "Hats" },
-    // { label: "Brand", value: "Puma" },
-    // { label: "Buying Price", value: "80.00" },
-    // { label: "Maximum Purchase Quantity", value: "100" },
-    // { label: "Weight", value: null },
-    // { label: "Purchasable", value: "Yes" },
-    // { label: "Refundable", value: "Yes" },
-    // { label: "Tags", value: "Hats" },
     { label: "Name", value: product.name },
     { label: "Gender", value: product.categoryInfo.gender },
     { label: "Category", value: product.categoryInfo.category },
@@ -112,14 +103,6 @@ const Information: React.FC<InformationProps> = ({ productId }) => {
   ];
 
   const productInfoRight = [
-    // { label: "SKU", value: "5500656" },
-    // { label: "Barcode", value: "EAN-13" },
-    // { label: "Tax", value: "VAT-5, VAT-20" },
-    // { label: "Selling Price", value: "100.00" },
-    // { label: "Low Stock Quantity Warning", value: "2" },
-    // { label: "Unit", value: "Piece" },
-    // { label: "Show Stock Out", value: "Disable" },
-    // { label: "Status", value: "Active" },
     { label: "Barcode", value: product.barcode },
     { label: "Tax", value: product.tax },
     { label: "Selling Price", value: product.sellingPrice },
@@ -132,10 +115,6 @@ const Information: React.FC<InformationProps> = ({ productId }) => {
     { label: "Status", value: product.status },
   ];
 
-  // const description = `
-  //   Step your Swoosh game up with this mid-depth, unstructured Club Cap.
-  //   Its curved bill and metal Swoosh logo give your look a clean finish while sweat-wicking tech helps you stay cool and comfortable.
-  // `;
   const description = product.description || "No Description Available";
 
   const benefits = [
