@@ -6,6 +6,7 @@ type ImageProps = {
   id: string;
   src: string;
   alt: string;
+  isInitial?: boolean;
 };
 
 interface ProductGalleryProps {
@@ -26,9 +27,39 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({ productId }) => {
         }
 
         const response = await axiosInstance.get(`/products/${productId}`);
-        console.log(response.data.data.images);
+        // console.log(response.data.data.images);
 
-        // setImages(response.data.data.images);
+        // Convert the initial product image to ImageProps
+        // const initialImage: ImageProps = {
+        //   id: "initial-image",
+        //   src: response.data.data.images,
+        //   alt: response.data.data.name || "Product Image",
+        //   isInitial: true,
+        // };
+
+        // Ensure images is always an array
+        const productImages = Array.isArray(response.data.data.images)
+          ? response.data.data.images
+          : response.data.data.images
+          ? [response.data.data.images]
+          : [];
+
+        // Convert images to ImageProps
+        const formattedImages = productImages.map(
+          (src: string, index: number) => ({
+            id: `image-${index}`,
+            src,
+            alt: `Product Image ${index + 1}`,
+            isInitial: index === 0,
+          })
+        );
+
+        // // Set the initial image
+        // setImages([initialImage]);
+        // setSelectedImage(initialImage);
+        // setLoading(false);
+        setImages(formattedImages);
+        setSelectedImage(formattedImages[0] || null);
         setLoading(false);
       } catch (err) {
         console.error("Error fetching images:", err);
@@ -40,31 +71,187 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({ productId }) => {
     fetchImages();
   }, [productId]);
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const updateProductImages = async (newImages: string[]) => {
+    try {
+      await axiosInstance.put(`/products/${productId}`, {
+        images: newImages,
+      });
+    } catch (error) {
+      console.error("Error updating product images:", error);
+    }
+  };
+
+  // const handleImageUpload = async (
+  //   event: React.ChangeEvent<HTMLInputElement>,
+  //   replaceInitial: boolean = false
+  // ) => {
+  //   const file = event.target.files?.[0];
+  //   if (file) {
+  //     if (images.length < 4 || replaceInitial) {
+  //       try {
+  //         // Create FormData and append the file
+  //         const formData = new FormData();
+  //         formData.append("file", file);
+
+  //         const response = await axiosInstance.post("/upload/image", formData, {
+  //           headers: {
+  //             "Content-Type": "multipart/form-data",
+  //           },
+  //         });
+
+  //         const newImage: ImageProps = {
+  //           id: Date.now().toString(),
+  //           src: response.data.url,
+  //           alt: file.name,
+  //         };
+
+  //         if (replaceInitial) {
+  //           // Replace the initial image
+  //           setImages((prevImages) =>
+  //             prevImages.map((img) =>
+  //               img.isInitial ? { ...newImage, isInitial: true } : img
+  //             )
+  //           );
+  //           setSelectedImage({ ...newImage, isInitial: true });
+  //         } else {
+  //           // Add new image
+  //           setImages((prevImages) => [...prevImages, newImage]);
+  //           if (!selectedImage) setSelectedImage(newImage);
+  //         }
+
+  //         // Update product image in backend
+  //         await updateProductMainImage(newImage.src);
+  //       } catch (error) {
+  //         console.error("Image upload error:", error);
+  //         alert("Failed to upload image");
+  //       }
+  //     } else {
+  //       alert("You can only upload up to 4 images.");
+  //     }
+  //   }
+  // };
+
+  const handleImageUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+    replaceInitial: boolean = false
+  ) => {
     const file = event.target.files?.[0];
     if (file) {
-      if (images.length < 4) {
-        const newImage: ImageProps = {
-          id: Date.now().toString(),
-          src: URL.createObjectURL(file),
-          alt: file.name,
-        };
-        setImages((prevImages) => [...prevImages, newImage]);
-        if (!selectedImage) setSelectedImage(newImage); // Set as the main image if it's the first one
+      if (images.length < 4 || replaceInitial) {
+        try {
+          const formData = new FormData();
+          formData.append("file", file);
+
+          const response = await axiosInstance.post("/upload/image", formData, {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          });
+
+          const newImage: ImageProps = {
+            id: Date.now().toString(),
+            src: response.data.url,
+            alt: file.name,
+          };
+
+          let updatedImages: ImageProps[];
+          if (replaceInitial) {
+            // Replace the initial image
+            updatedImages = images.map((img) =>
+              img.isInitial ? { ...newImage, isInitial: true } : img
+            );
+          } else {
+            // Add new image
+            updatedImages = [...images, newImage];
+          }
+
+          // Limit to 4 images
+          updatedImages = updatedImages.slice(0, 4);
+
+          setImages(updatedImages);
+          setSelectedImage(newImage);
+
+          // Update product images in backend
+          await updateProductImages(updatedImages.map((img) => img.src));
+        } catch (error) {
+          console.error("Image upload error:", error);
+          alert("Failed to upload image");
+        }
       } else {
         alert("You can only upload up to 4 images.");
       }
     }
   };
 
-  const handleImageDelete = (id: string) => {
-    setImages((prevImages) => {
-      const updatedImages = prevImages.filter((image) => image.id !== id);
-      if (selectedImage?.id === id) {
-        setSelectedImage(updatedImages[0] || null); // Update selected image
+  // const updateProductMainImage = async (newImageUrl: string) => {
+  //   try {
+  //     await axiosInstance.put(`/products/${productId}`, {
+  //       images: newImageUrl,
+  //     });
+  //   } catch (error) {
+  //     console.error("Error updating main product image:", error);
+  //   }
+  // };
+
+  const removeImageFromCloudinary = async (imageUrl: string) => {
+    try {
+      await axiosInstance.delete("/upload/image", {
+        data: { imageUrl },
+      });
+    } catch (error) {
+      console.error("Error removing image from Cloudinary:", error);
+    }
+  };
+
+  // const handleImageDelete = async (id: string) => {
+  //   try {
+  //     // Find the image to be deleted
+  //     const imageToDelete = images.find((image) => image.id === id);
+
+  //     if (imageToDelete && !imageToDelete.isInitial) {
+  //       // Remove from Cloudinary
+  //       await removeImageFromCloudinary(imageToDelete.src);
+
+  //       // Update state
+  //       setImages((prevImages) => {
+  //         const updatedImages = prevImages.filter((image) => image.id !== id);
+
+  //         // If deleting the selected image
+  //         if (selectedImage?.id === id) {
+  //           // Select the first image or null
+  //           setSelectedImage(updatedImages[0] || null);
+  //         }
+
+  //         return updatedImages;
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.error("Error deleting image:", error);
+  //     alert("Failed to delete image");
+  //   }
+  // };
+
+  const handleImageDelete = async (id: string) => {
+    try {
+      const imageToDelete = images.find((image) => image.id === id);
+
+      if (imageToDelete && !imageToDelete.isInitial) {
+        // Remove from Cloudinary (you'll need to implement this)
+        await removeImageFromCloudinary(imageToDelete.src);
+
+        // Update state and backend
+        const updatedImages = images.filter((image) => image.id !== id);
+
+        setImages(updatedImages);
+        setSelectedImage(updatedImages[0] || null);
+
+        // Update product images in backend
+        await updateProductImages(updatedImages.map((img) => img.src));
       }
-      return updatedImages;
-    });
+    } catch (error) {
+      console.error("Error deleting image:", error);
+      alert("Failed to delete image");
+    }
   };
 
   const handleImageClick = (image: ImageProps) => {
@@ -98,12 +285,28 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({ productId }) => {
                     className="w-full h-full rounded-lg cursor-pointer object-cover"
                     onClick={() => handleImageClick(images[index])}
                   />
-                  <button
-                    className="absolute top-0 right-0 bg-white rounded-full p-1 shadow-md"
-                    onClick={() => handleImageDelete(images[index].id)}
-                  >
-                    <FaTimes className="text-red-500" />
-                  </button>
+                  {images[index].isInitial ? (
+                    <label
+                      htmlFor="replace-initial-image"
+                      className="absolute top-0 right-0 bg-white rounded-full p-1 shadow-md cursor-pointer"
+                    >
+                      <FaPlus className="text-green-500" />
+                      <input
+                        id="replace-initial-image"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => handleImageUpload(e, true)}
+                      />
+                    </label>
+                  ) : (
+                    <button
+                      className="absolute top-0 right-0 bg-white rounded-full p-1 shadow-md"
+                      onClick={() => handleImageDelete(images[index].id)}
+                    >
+                      <FaTimes className="text-red-500" />
+                    </button>
+                  )}
                 </>
               ) : (
                 <label

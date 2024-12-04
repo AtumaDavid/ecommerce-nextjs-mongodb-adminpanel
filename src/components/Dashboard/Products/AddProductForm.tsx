@@ -5,6 +5,7 @@ import RadioGroup from "./ProductsForm/RadioGroup";
 import TagInput from "./ProductsForm/TagInput";
 import TextArea from "./ProductsForm/TextArea";
 import { Product, ProductFormData } from "./types/product";
+import axiosInstance from "@/lib/axiosInstance";
 
 type Gender = "men" | "women" | "juniors";
 
@@ -102,11 +103,62 @@ const ProductForm: React.FC<AddProductFormProps> = ({
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [tagInput, setTagInput] = useState("");
 
+  // avatar placeholder
+  const generateInitialsAvatar = (name: string, bgColor?: string) => {
+    // Ensure name is a string and has a value
+    const safeName = name || "Product";
+
+    // Extract initials
+    const initials = safeName
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase())
+      .slice(0, 2)
+      .join("");
+
+    // Generate a background color if not provided
+    const generateColor = () => {
+      const letters = "0123456789ABCDEF";
+      let color = "#";
+      for (let i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+      }
+      return color;
+    };
+
+    const backgroundColor = bgColor || generateColor();
+
+    // Create SVG directly (more reliable than canvas)
+    const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+      <rect width="100%" height="100%" fill="${backgroundColor}"/>
+      <text 
+        x="50%" 
+        y="50%" 
+        dominant-baseline="middle" 
+        text-anchor="middle" 
+        fill="white" 
+        font-size="80" 
+        font-family="Arial, sans-serif"
+      >
+        ${initials}
+      </text>
+    </svg>
+  `;
+
+    // Convert to base64
+    return `data:image/svg+xml;base64,${btoa(svg)}`;
+  };
+
   // console.log("Initial data received:", initialData);
   const [formData, setFormData] = useState<ProductFormData>({
     _id: initialData?._id || undefined, // Add this line
     name: initialData?.name || "",
-    images: initialData?.images || "",
+    // images: initialData?.images || "",
+    images:
+      initialData?.images ||
+      (initialData?.name
+        ? generateInitialsAvatar(initialData.name)
+        : generateInitialsAvatar("Product")),
     // sku: initialData
     //   ? initialData.id.toString()
     //   : Math.floor(Math.random() * 100000).toString(),
@@ -136,7 +188,12 @@ const ProductForm: React.FC<AddProductFormProps> = ({
       setFormData({
         _id: initialData?._id || undefined, // Add this line
         name: initialData.name || "",
-        images: initialData.images || "",
+        // images: initialData.images || "",
+        images:
+          initialData?.images ||
+          (initialData?.name
+            ? generateInitialsAvatar(initialData.name)
+            : generateInitialsAvatar("Product")),
         categoryInfo: {
           gender: initialData.categoryInfo.gender || "",
           category: initialData.categoryInfo.category || "",
@@ -289,49 +346,40 @@ const ProductForm: React.FC<AddProductFormProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Image upload handler
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      // Validate file type and size
-      const allowedTypes = [
-        "image/jpeg",
-        "image/png",
-        "image/gif",
-        "image/webp",
-      ];
-      const maxSize = 5 * 1024 * 1024; // 5MB
-
-      if (!allowedTypes.includes(file.type)) {
-        setErrors((prev) => ({
-          ...prev,
-          images: "Invalid file type. Please upload JPEG, PNG, GIF, or WebP.",
-        }));
+  const handleImageUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    try {
+      // Check if files exist
+      if (!event.target.files || event.target.files.length === 0) {
+        console.error("No file selected");
         return;
       }
 
-      if (file.size > maxSize) {
-        setErrors((prev) => ({
-          ...prev,
-          images: "File is too large. Maximum size is 5MB.",
-        }));
-        return;
-      }
+      // Create FormData and append the file
+      const formData = new FormData();
+      formData.append("file", event.target.files[0]);
 
-      // Create a FileReader to convert image to base64
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData((prev) => ({
-          ...prev,
-          images: reader.result as string,
-        }));
-        // Clear any previous image-related errors
-        setErrors((prev) => {
-          const newErrors = { ...prev };
-          delete newErrors.images;
-          return newErrors;
-        });
-      };
-      reader.readAsDataURL(file);
+      const response = await axiosInstance.post("/upload/image", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      console.log(response.data);
+
+      // Set the Cloudinary URL in the form data
+      setFormData((prev) => ({
+        ...prev,
+        images: response.data.url,
+      }));
+    } catch (error) {
+      console.error("Image upload error:", error);
+      // Fallback to initials avatar if upload fails
+      setFormData((prev) => ({
+        ...prev,
+        images: generateInitialsAvatar(prev.name || "Product"),
+      }));
     }
   };
 
@@ -374,6 +422,9 @@ const ProductForm: React.FC<AddProductFormProps> = ({
     // Prepare product data for submission
     const productData: ProductFormData = {
       ...formData,
+      // Generate initials avatar if no image is provided
+      images:
+        formData.images || generateInitialsAvatar(formData.name || "Product"),
       createdAt: new Date(),
     };
 
@@ -418,13 +469,22 @@ const ProductForm: React.FC<AddProductFormProps> = ({
                   alt="Product"
                   className="h-20 w-20 object-cover rounded"
                 />
-                <button
+                {/* <button
                   type="button"
                   onClick={handleRemoveImage}
                   className="text-red-500 hover:text-red-700"
                 >
                   Remove
-                </button>
+                </button> */}
+                {!formData.images.startsWith("data:image/svg+xml") && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveImage}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    Remove
+                  </button>
+                )}
               </div>
             )}
           </div>
