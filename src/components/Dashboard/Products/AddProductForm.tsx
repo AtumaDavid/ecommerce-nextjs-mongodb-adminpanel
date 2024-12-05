@@ -154,11 +154,28 @@ const ProductForm: React.FC<AddProductFormProps> = ({
     _id: initialData?._id || undefined, // Add this line
     name: initialData?.name || "",
     // images: initialData?.images || "",
-    images:
-      initialData?.images ||
-      (initialData?.name
+    // images:
+    //   initialData?.images ||
+    //   (initialData?.name
+    //     ? generateInitialsAvatar(initialData.name)
+    //     : generateInitialsAvatar("Product")),
+    images: (() => {
+      // Handle different possible image input types
+      const image = initialData?.images;
+
+      if (typeof image === "string") {
+        return image;
+      }
+
+      if (Array.isArray(image) && image.length > 0) {
+        return image[0]; // Take first image if array
+      }
+
+      // Fallback to generated avatar
+      return initialData?.name
         ? generateInitialsAvatar(initialData.name)
-        : generateInitialsAvatar("Product")),
+        : generateInitialsAvatar("Product");
+    })(),
     // sku: initialData
     //   ? initialData.id.toString()
     //   : Math.floor(Math.random() * 100000).toString(),
@@ -189,11 +206,27 @@ const ProductForm: React.FC<AddProductFormProps> = ({
         _id: initialData?._id || undefined, // Add this line
         name: initialData.name || "",
         // images: initialData.images || "",
-        images:
-          initialData?.images ||
-          (initialData?.name
+        // images:
+        //   initialData?.images ||
+        //   (initialData?.name
+        //     ? generateInitialsAvatar(initialData.name)
+        //     : generateInitialsAvatar("Product")),
+        images: (() => {
+          const image = initialData.images;
+
+          if (typeof image === "string") {
+            return image;
+          }
+
+          if (Array.isArray(image) && image.length > 0) {
+            return image[0]; // Take first image if array
+          }
+
+          // Fallback to generated avatar
+          return initialData?.name
             ? generateInitialsAvatar(initialData.name)
-            : generateInitialsAvatar("Product")),
+            : generateInitialsAvatar("Product");
+        })(),
         categoryInfo: {
           gender: initialData.categoryInfo.gender || "",
           category: initialData.categoryInfo.category || "",
@@ -368,7 +401,7 @@ const ProductForm: React.FC<AddProductFormProps> = ({
 
       console.log(response.data);
 
-      // Set the Cloudinary URL in the form data
+      // Always set as a single image
       setFormData((prev) => ({
         ...prev,
         images: response.data.url,
@@ -384,6 +417,18 @@ const ProductForm: React.FC<AddProductFormProps> = ({
   };
 
   // Image removal handler
+  // const handleRemoveImage = () => {
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     images: "",
+  //   }));
+  //   // Reset file input
+  //   if (fileInputRef.current) {
+  //     fileInputRef.current.value = "";
+  //   }
+  // };
+  // Add these helper functions
+  // Remove image handler
   const handleRemoveImage = () => {
     setFormData((prev) => ({
       ...prev,
@@ -394,6 +439,22 @@ const ProductForm: React.FC<AddProductFormProps> = ({
       fileInputRef.current.value = "";
     }
   };
+
+  // const handleRemoveSpecificImage = (indexToRemove: number) => {
+  //   setFormData((prev) => {
+  //     if (!Array.isArray(prev.images)) return prev;
+
+  //     const updatedImages = prev.images.filter(
+  //       (_, index) => index !== indexToRemove
+  //     );
+
+  //     return {
+  //       ...prev,
+  //       images:
+  //         updatedImages.length > 1 ? updatedImages : updatedImages[0] || "",
+  //     };
+  //   });
+  // };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -463,28 +524,22 @@ const ProductForm: React.FC<AddProductFormProps> = ({
             </label>
 
             {formData.images && (
-              <div className="flex items-center space-x-2">
+              <div className="relative inline-block">
                 <img
                   src={formData.images}
                   alt="Product"
                   className="h-20 w-20 object-cover rounded"
                 />
-                {/* <button
-                  type="button"
-                  onClick={handleRemoveImage}
-                  className="text-red-500 hover:text-red-700"
-                >
-                  Remove
-                </button> */}
-                {!formData.images.startsWith("data:image/svg+xml") && (
-                  <button
-                    type="button"
-                    onClick={handleRemoveImage}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    Remove
-                  </button>
-                )}
+                {typeof formData.images === "string" &&
+                  !formData.images.startsWith("data:image/svg+xml") && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1 text-xs"
+                    >
+                      X
+                    </button>
+                  )}
               </div>
             )}
           </div>

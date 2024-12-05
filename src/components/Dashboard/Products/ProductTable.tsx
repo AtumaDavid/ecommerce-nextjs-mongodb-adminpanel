@@ -113,11 +113,41 @@ const ProductTable: React.FC<ExtendedProductTableProps> = ({
               <td className="px-1 py-1">
                 <div className="flex items-center gap-3">
                   {product.images ? (
-                    <img
-                      src={product.images}
-                      alt={product.name}
-                      className="h-12 w-12 rounded-lg object-cover no-print"
-                    />
+                    (() => {
+                      // Determine the image source
+                      const imageSrc =
+                        typeof product.images === "string" &&
+                        product.images.trim() !== ""
+                          ? product.images
+                          : Array.isArray(product.images) &&
+                            product.images.length > 0 &&
+                            typeof product.images[0] === "string"
+                          ? product.images[0]
+                          : undefined;
+
+                      // Only render img if we have a valid image source
+                      return imageSrc ? (
+                        <img
+                          src={imageSrc}
+                          alt={product.name || "Product Image"}
+                          className="h-12 w-12 rounded-lg object-cover no-print"
+                          onError={(e) => {
+                            console.error("Image load error:", {
+                              productId: product._id,
+                              imageSrc,
+                              imageType: typeof product.images,
+                              imageValue: product.images,
+                            });
+                            const imgElement = e.target as HTMLImageElement;
+                            imgElement.style.display = "none";
+                          }}
+                        />
+                      ) : (
+                        <div className="h-12 w-12 rounded-lg bg-gray-200 flex items-center justify-center no-print">
+                          <span className="text-gray-500">No Image</span>
+                        </div>
+                      );
+                    })()
                   ) : (
                     <div className="h-12 w-12 rounded-lg bg-gray-200 flex items-center justify-center no-print">
                       <span className="text-gray-500">No Image</span>

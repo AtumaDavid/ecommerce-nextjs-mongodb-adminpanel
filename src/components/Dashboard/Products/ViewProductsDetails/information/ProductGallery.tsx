@@ -29,14 +29,6 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({ productId }) => {
         const response = await axiosInstance.get(`/products/${productId}`);
         // console.log(response.data.data.images);
 
-        // Convert the initial product image to ImageProps
-        // const initialImage: ImageProps = {
-        //   id: "initial-image",
-        //   src: response.data.data.images,
-        //   alt: response.data.data.name || "Product Image",
-        //   isInitial: true,
-        // };
-
         // Ensure images is always an array
         const productImages = Array.isArray(response.data.data.images)
           ? response.data.data.images
@@ -54,10 +46,6 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({ productId }) => {
           })
         );
 
-        // // Set the initial image
-        // setImages([initialImage]);
-        // setSelectedImage(initialImage);
-        // setLoading(false);
         setImages(formattedImages);
         setSelectedImage(formattedImages[0] || null);
         setLoading(false);
@@ -80,56 +68,6 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({ productId }) => {
       console.error("Error updating product images:", error);
     }
   };
-
-  // const handleImageUpload = async (
-  //   event: React.ChangeEvent<HTMLInputElement>,
-  //   replaceInitial: boolean = false
-  // ) => {
-  //   const file = event.target.files?.[0];
-  //   if (file) {
-  //     if (images.length < 4 || replaceInitial) {
-  //       try {
-  //         // Create FormData and append the file
-  //         const formData = new FormData();
-  //         formData.append("file", file);
-
-  //         const response = await axiosInstance.post("/upload/image", formData, {
-  //           headers: {
-  //             "Content-Type": "multipart/form-data",
-  //           },
-  //         });
-
-  //         const newImage: ImageProps = {
-  //           id: Date.now().toString(),
-  //           src: response.data.url,
-  //           alt: file.name,
-  //         };
-
-  //         if (replaceInitial) {
-  //           // Replace the initial image
-  //           setImages((prevImages) =>
-  //             prevImages.map((img) =>
-  //               img.isInitial ? { ...newImage, isInitial: true } : img
-  //             )
-  //           );
-  //           setSelectedImage({ ...newImage, isInitial: true });
-  //         } else {
-  //           // Add new image
-  //           setImages((prevImages) => [...prevImages, newImage]);
-  //           if (!selectedImage) setSelectedImage(newImage);
-  //         }
-
-  //         // Update product image in backend
-  //         await updateProductMainImage(newImage.src);
-  //       } catch (error) {
-  //         console.error("Image upload error:", error);
-  //         alert("Failed to upload image");
-  //       }
-  //     } else {
-  //       alert("You can only upload up to 4 images.");
-  //     }
-  //   }
-  // };
 
   const handleImageUpload = async (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -183,70 +121,56 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({ productId }) => {
     }
   };
 
-  // const updateProductMainImage = async (newImageUrl: string) => {
-  //   try {
-  //     await axiosInstance.put(`/products/${productId}`, {
-  //       images: newImageUrl,
-  //     });
-  //   } catch (error) {
-  //     console.error("Error updating main product image:", error);
-  //   }
-  // };
-
+  // In your ProductGallery component
   const removeImageFromCloudinary = async (imageUrl: string) => {
     try {
-      await axiosInstance.delete("/upload/image", {
-        data: { imageUrl },
+      // Extract public ID from Cloudinary URL
+      const publicId = extractPublicIdFromCloudinaryUrl(imageUrl);
+
+      if (!publicId) {
+        console.error("Could not extract public ID from URL");
+        return false;
+      }
+
+      const response = await axiosInstance.post("/upload/delete-image", {
+        publicId,
       });
+
+      return response.data.success;
     } catch (error) {
       console.error("Error removing image from Cloudinary:", error);
+      return false;
     }
   };
 
-  // const handleImageDelete = async (id: string) => {
-  //   try {
-  //     // Find the image to be deleted
-  //     const imageToDelete = images.find((image) => image.id === id);
-
-  //     if (imageToDelete && !imageToDelete.isInitial) {
-  //       // Remove from Cloudinary
-  //       await removeImageFromCloudinary(imageToDelete.src);
-
-  //       // Update state
-  //       setImages((prevImages) => {
-  //         const updatedImages = prevImages.filter((image) => image.id !== id);
-
-  //         // If deleting the selected image
-  //         if (selectedImage?.id === id) {
-  //           // Select the first image or null
-  //           setSelectedImage(updatedImages[0] || null);
-  //         }
-
-  //         return updatedImages;
-  //       });
-  //     }
-  //   } catch (error) {
-  //     console.error("Error deleting image:", error);
-  //     alert("Failed to delete image");
-  //   }
-  // };
+  // Utility function to extract public ID
+  const extractPublicIdFromCloudinaryUrl = (url: string): string | null => {
+    // Cloudinary URL pattern typically looks like:
+    // https://res.cloudinary.com/[cloud_name]/image/upload/v[timestamp]/[public_id].[format]
+    const matches = url.match(/\/upload\/v\d+\/([^/\.]+)/);
+    return matches ? matches[1] : null;
+  };
 
   const handleImageDelete = async (id: string) => {
     try {
       const imageToDelete = images.find((image) => image.id === id);
 
       if (imageToDelete && !imageToDelete.isInitial) {
-        // Remove from Cloudinary (you'll need to implement this)
-        await removeImageFromCloudinary(imageToDelete.src);
+        // Remove from Cloudinary
+        const isRemoved = await removeImageFromCloudinary(imageToDelete.src);
 
-        // Update state and backend
-        const updatedImages = images.filter((image) => image.id !== id);
+        if (isRemoved) {
+          // Update state and backend
+          const updatedImages = images.filter((image) => image.id !== id);
 
-        setImages(updatedImages);
-        setSelectedImage(updatedImages[0] || null);
+          setImages(updatedImages);
+          setSelectedImage(updatedImages[0] || null);
 
-        // Update product images in backend
-        await updateProductImages(updatedImages.map((img) => img.src));
+          // Update product images in backend
+          await updateProductImages(updatedImages.map((img) => img.src));
+        } else {
+          throw new Error("Failed to remove image from Cloudinary");
+        }
       }
     } catch (error) {
       console.error("Error deleting image:", error);

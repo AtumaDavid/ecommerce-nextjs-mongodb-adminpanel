@@ -4,7 +4,8 @@ export interface Product {
   name: string;
   // sku: string;
   categoryInfo: CategoryInfo;
-  images: string;
+  // images: string;
+  images?: string | string[] | null;
   category: string;
   buyingPrice: number;
   sellingPrice: number;
