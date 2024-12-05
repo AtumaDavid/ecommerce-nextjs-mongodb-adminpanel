@@ -21,13 +21,13 @@ const TabContent: React.FC<TabContentProps> = ({ activeTab, productId }) => {
       case "Images":
         return <ProductGallery productId={productId} />;
       case "Variation":
-        return <Variations />;
+        return <Variations productId={productId} />;
       case "Offer":
         return <OfferForm productId={productId} />;
       case "Shipping & Return":
         return <ShippingAndReturn productId={productId} />;
       case "SEO":
-        return <SEOForm />;
+        return <SEOForm productId={productId} />;
       default:
         return (
           <p className="text-gray-500">{activeTab} content goes here...</p>

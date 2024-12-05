@@ -112,7 +112,7 @@ const OfferForm: React.FC<OfferFormProps> = ({ productId }) => {
 
       showToast({
         type: "success",
-        message: "Offer saved successfully",
+        message: "saved successfully",
       });
 
       // Reset form after saving

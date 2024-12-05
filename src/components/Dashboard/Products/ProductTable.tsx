@@ -1,5 +1,4 @@
 "use client";
-// components/ProductTable.tsx
 import React from "react";
 import {
   FaSort,

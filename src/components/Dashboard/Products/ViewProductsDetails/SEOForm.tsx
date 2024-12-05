@@ -1,13 +1,21 @@
-import React, { useState, ChangeEvent, KeyboardEvent } from "react";
+import axiosInstance from "@/lib/axiosInstance";
+import React, { useState, ChangeEvent, KeyboardEvent, useEffect } from "react";
+import { useToast } from "@/context/ToastContext"; // Assuming you have a toast context
 
 interface SEOFormData {
   title: string;
   description: string;
   metaKeywords: string[];
-  image?: File | null;
+  image?: string | null;
 }
 
-const SEOForm: React.FC = () => {
+interface SeoProps {
+  productId: string | null;
+}
+
+const SEOForm: React.FC<SeoProps> = ({ productId }) => {
+  const { showToast } = useToast(); // Initialize toast
+
   const [formData, setFormData] = useState<SEOFormData>({
     title: "",
     description: "",
@@ -17,7 +25,46 @@ const SEOForm: React.FC = () => {
 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [currentKeyword, setCurrentKeyword] = useState<string>("");
-  const [submittedData, setSubmittedData] = useState<SEOFormData[]>([]);
+  // const [existingSeo, setExistingSeo] = useState<SEOFormData | null>(null);
+  const [hasSeoEntry, setHasSeoEntry] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (productId) {
+      fetchProductData();
+    }
+  }, [productId]);
+
+  const fetchProductData = async () => {
+    try {
+      const response = await axiosInstance.get(`/products/${productId}`);
+
+      if (response.data.data.seo) {
+        const seoData = response.data.data.seo;
+        const fetchedSeo = {
+          title: seoData.metaTitle || "",
+          description: seoData.metaDescription || "",
+          metaKeywords: seoData.metaKeywords || [],
+          image: seoData.metaImage || null,
+        };
+
+        // setExistingSeo(fetchedSeo);
+        setFormData(fetchedSeo);
+        setHasSeoEntry(true);
+
+        if (seoData.metaImage) {
+          setImagePreview(seoData.metaImage);
+        }
+      } else {
+        setHasSeoEntry(true);
+      }
+    } catch (error) {
+      console.error("Error fetching product data:", error);
+      showToast({
+        type: "error",
+        message: "Failed to fetch SEO data",
+      });
+    }
+  };
 
   const handleInputChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -29,19 +76,37 @@ const SEOForm: React.FC = () => {
     }));
   };
 
-  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setFormData((prevData) => ({
-        ...prevData,
-        image: file,
-      }));
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
 
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+        const response = await axiosInstance.post("/upload/image", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+
+        setFormData((prevData) => ({
+          ...prevData,
+          image: response.data.url,
+        }));
+
+        setImagePreview(response.data.url);
+
+        showToast({
+          type: "success",
+          message: "Image uploaded successfully",
+        });
+      } catch (error) {
+        console.error("Image upload error:", error);
+        showToast({
+          type: "error",
+          message: "Failed to upload image",
+        });
+      }
     }
   };
 
@@ -80,40 +145,89 @@ const SEOForm: React.FC = () => {
     }));
   };
 
-  // const handleSave = () => {
-  //   // Implement save logic here
-  //   console.log("Saving SEO data:", formData);
-  // };
-  const handleSave = () => {
-    // Validate form data before saving
+  const handleSave = async () => {
+    // Validate form data
     if (
       !formData.title ||
       !formData.description ||
       formData.metaKeywords.length === 0
     ) {
-      alert("Please fill in all required fields");
+      showToast({
+        type: "error",
+        message: "Please fill all required fields",
+      });
       return;
     }
 
-    // Add the current form data to submitted data
-    setSubmittedData((prevData) => [...prevData, { ...formData }]);
+    try {
+      const seoPayload = {
+        seo: {
+          metaTitle: formData.title,
+          metaDescription: formData.description,
+          metaKeywords: formData.metaKeywords,
+          metaImage: formData.image,
+        },
+      };
 
-    // Optional: Reset form after submission
-    setFormData({
-      title: "",
-      description: "",
-      metaKeywords: [],
-      image: null,
-    });
-    setImagePreview(null);
-    setCurrentKeyword("");
+      // Update product with SEO data
+      await axiosInstance.put(`/products/${productId}`, seoPayload);
+
+      // Update existing SEO state
+      // hasSeoEntry(formData);
+
+      showToast({
+        type: "success",
+        message: "SEO data saved successfully",
+      });
+    } catch (error) {
+      console.error("Save error:", error);
+      showToast({
+        type: "error",
+        message: "Failed to save SEO data",
+      });
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!hasSeoEntry) {
+      showToast({
+        type: "error",
+        message: "No SEO entry to delete",
+      });
+      return;
+    }
+
+    try {
+      // Remove SEO data by setting it to null
+      await axiosInstance.put(`/products/${productId}`, { seo: null });
+
+      // Reset states
+      setHasSeoEntry(false);
+      setFormData({
+        title: "",
+        description: "",
+        metaKeywords: [],
+        image: null,
+      });
+      setImagePreview(null);
+
+      showToast({
+        type: "success",
+        message: "SEO entry deleted successfully",
+      });
+    } catch (error) {
+      console.error("Delete error:", error);
+      showToast({
+        type: "error",
+        message: "Failed to delete SEO entry",
+      });
+    }
   };
 
   return (
     <div className="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md">
-      {/* <h2 className="text-xl font-semibold mb-4">SEO</h2> */}
       <form>
-        {/* Title input remains the same */}
+        {/* Title input */}
         <div className="mb-4">
           <label
             className="block text-gray-700 text-sm font-bold mb-2"
@@ -131,7 +245,7 @@ const SEOForm: React.FC = () => {
           />
         </div>
 
-        {/* Description input remains the same */}
+        {/* Description input */}
         <div className="mb-4">
           <label
             className="block text-gray-700 text-sm font-bold mb-2"
@@ -140,7 +254,7 @@ const SEOForm: React.FC = () => {
             DESCRIPTION <span className="text-red-500">*</span>
           </label>
           <textarea
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline h-32"
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline h- 32"
             id="description"
             placeholder="Enter description"
             value={formData.description}
@@ -148,7 +262,7 @@ const SEOForm: React.FC = () => {
           />
         </div>
 
-        {/* Meta Keywords with tag-like input */}
+        {/* Meta Keywords input */}
         <div className="mb-4">
           <label
             className="block text-gray-700 text-sm font-bold mb-2"
@@ -185,7 +299,7 @@ const SEOForm: React.FC = () => {
           </div>
         </div>
 
-        {/* Image input with remove option */}
+        {/* Image input */}
         <div className="mb-4">
           <label
             className="block text-gray-700 text-sm font-bold mb-2"
@@ -226,55 +340,18 @@ const SEOForm: React.FC = () => {
           >
             Save
           </button>
+
+          {hasSeoEntry && (
+            <button
+              className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+              type="button"
+              onClick={handleDelete}
+            >
+              Delete SEO
+            </button>
+          )}
         </div>
       </form>
-      {/* Submitted SEO Entries Section */}
-      {submittedData.length > 0 && (
-        <div className="mt-8 border-t pt-6">
-          <h3 className="text-xl font-bold mb-4">Submitted SEO Entries</h3>
-          {submittedData.map((entry, index) => (
-            <div
-              key={index}
-              className="bg-gray-50 p-4 rounded-lg mb-4 shadow-sm"
-            >
-              <div className="mb-2">
-                <h4 className="font-semibold text-lg">Title:</h4>
-                <p>{entry.title}</p>
-              </div>
-
-              <div className="mb-2">
-                <h4 className="font-semibold">Description:</h4>
-                <p>{entry.description}</p>
-              </div>
-
-              <div className="mb-2">
-                <h4 className="font-semibold">Meta Keywords:</h4>
-                <div className="flex flex-wrap gap-2">
-                  {entry.metaKeywords.map((keyword) => (
-                    <span
-                      key={keyword}
-                      className="bg-blue-100 px-2 py-1 rounded text-sm"
-                    >
-                      {keyword}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {entry.image && (
-                <div>
-                  <h4 className="font-semibold">Image:</h4>
-                  <img
-                    src={URL.createObjectURL(entry.image)}
-                    alt="Uploaded"
-                    className="w-32 h-32 object-cover rounded"
-                  />
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 };
