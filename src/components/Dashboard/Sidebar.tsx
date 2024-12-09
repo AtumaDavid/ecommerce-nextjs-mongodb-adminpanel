@@ -1,5 +1,6 @@
 import Link from "next/link";
-import React, { useState } from "react";
+import { usePathname } from "next/navigation";
+import React from "react";
 import { CiShoppingTag } from "react-icons/ci";
 import { FaThLarge } from "react-icons/fa";
 import { MdOutlineRemoveShoppingCart } from "react-icons/md";
@@ -13,7 +14,8 @@ export default function Sidebar({
   openSidebar,
   setOpenSidebar,
 }: DashboardSidebarProps) {
-  const [activeLink, setActiveLink] = useState<string>("Dashboard");
+  const pathname = usePathname();
+  // const [activeLink, setActiveLink] = useState<string>("/dashboard");
 
   const sideBarSections = [
     {
@@ -23,6 +25,11 @@ export default function Sidebar({
           icon: <RiProductHuntLine />,
           label: "Products",
           link: "/dashboard/products",
+        },
+        {
+          icon: <RiProductHuntLine />,
+          label: "Categories",
+          link: "/dashboard/categories",
         },
       ],
     },
@@ -53,12 +60,12 @@ export default function Sidebar({
         <Link
           href={"/dashboard"}
           className={`${
-            activeLink === "Dashboard"
+            pathname === "/dashboard"
               ? "bg-primary text-white font-semibold"
               : ""
           } flex items-center space-x-2 p-2 rounded-md cursor-pointer`}
           onClick={() => {
-            setActiveLink("Dashboard");
+            // setActiveLink("Dashboard");
             setOpenSidebar(true);
           }}
         >
@@ -78,11 +85,11 @@ export default function Sidebar({
                   href={item.link}
                   key={index}
                   className={`${
-                    activeLink === item.label
+                    item?.link === pathname
                       ? "bg-primary text-white font-semibold"
                       : ""
                   } flex items-center space-x-2 p-2 rounded-md cursor-pointer`}
-                  onClick={() => setActiveLink(item?.label)}
+                  // onClick={() => setActiveLink(item?.link)}
                 >
                   {item.icon}
                   <span className="md:inline">{item.label}</span>

@@ -26,6 +26,7 @@ const DashboardProduct = () => {
   const [editingProduct, setEditingProduct] = useState<Product | undefined>(
     undefined
   );
+  const [isLoading, setIsLoading] = useState(true);
 
   // SORT AND FILTER PRODUCTS
   const filteredAndSortedProducts = useMemo(() => {
@@ -119,6 +120,7 @@ const DashboardProduct = () => {
   // FETCH PRODUCT
   const fetchProducts = async () => {
     try {
+      setIsLoading(true);
       const response = await axiosInstance.get("/products");
       // console.log(response.data.data);
       const sortedProducts = response.data.data.sort(
@@ -132,6 +134,8 @@ const DashboardProduct = () => {
       setProducts(sortedProducts);
     } catch (error) {
       console.error("Error fetching products:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
   useEffect(() => {
@@ -200,6 +204,17 @@ const DashboardProduct = () => {
       console.error("Error fetching product details:", error);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto flex justify-center items-center h-screen">
+        <div className="flex flex-col items-center">
+          <div className="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mb-4"></div>
+          <p className="text-gray-600 text-lg">Loading Products...</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="container mx-auto">
       <div className="text-xl font-medium text-gray-600 p-2">

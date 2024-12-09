@@ -14,6 +14,12 @@ export default function Header() {
   const pathname = usePathname();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
+  const [isLanguageOpen, setIsLanguageOpen] = useState(false);
+
+  const toggleCategoriesDropdown = (): void => {
+    setIsCategoriesOpen(!isCategoriesOpen);
+  };
   console.log(setIsLoggedIn);
   // const handleLogin = () => {
   //   // Perform login logic here
@@ -25,8 +31,8 @@ export default function Header() {
   //   setIsLoggedIn(false); // Set to false on logout
   // };
 
-  const handleProfileEnter = () => setIsProfileOpen(true);
-  const handleProfileLeave = () => setIsProfileOpen(false);
+  // const handleProfileEnter = () => setIsProfileOpen(true);
+  // const handleProfileLeave = () => setIsProfileOpen(false);
 
   return (
     <div className="bg-white shadow-md sticky top-0 z-50">
@@ -55,13 +61,18 @@ export default function Header() {
             >
               Home
             </Link>
-            <div className="relative group py-4">
-              <button className="text-black flex items-center gap-2 font-bold text-xl">
+            <div className="relative">
+              <button
+                onClick={toggleCategoriesDropdown}
+                className="text-black flex items-center gap-2 font-bold text-xl"
+              >
                 Categories <IoIosArrowDropdown className="text-xl" />
               </button>
-              <div className="absolute w-[800px] bg-white rounded shadow-md hidden group-hover:block">
-                <MenuTabs />
-              </div>
+              {isCategoriesOpen && (
+                <div className="absolute w-[800px] bg-white rounded shadow-md">
+                  <MenuTabs />
+                </div>
+              )}
             </div>
             <Link
               href={"/offers"}
@@ -87,7 +98,10 @@ export default function Header() {
           </div>
           {/* Language */}
           <div className="relative group me-4 py-4">
-            <div className="flex items-center space-x-2 cursor-pointer">
+            <div
+              className="flex items-center space-x-2 cursor-pointer"
+              onClick={() => setIsLanguageOpen(!isLanguageOpen)}
+            >
               <Image
                 src={"/english.png"}
                 alt="flag"
@@ -98,24 +112,36 @@ export default function Header() {
               <span>English</span>
               <IoIosArrowDropdown className="text-xl ms-3" />
             </div>
-            <div className="absolute top-14 left-[1px] w-48 p-3 bg-white border rounded shadow-lg hidden group-hover:block">
-              <button className="flex items-center space-x-8 gap-3">
-                <Image src={"/english.png"} alt="flag" width={20} height={5} />
-                English
-              </button>
-            </div>
+            {isLanguageOpen && (
+              <div className="absolute top-14 left-[1px] w-48 p-3 bg-white border rounded shadow-lg">
+                <button
+                  className="flex items-center space-x-8 gap-3"
+                  onClick={() => {
+                    // Handle language selection logic
+                    setIsLanguageOpen(false);
+                  }}
+                >
+                  <Image
+                    src={"/english.png"}
+                    alt="flag"
+                    width={20}
+                    height={5}
+                  />
+                  English
+                </button>
+              </div>
+            )}
           </div>
           {/* Wishlist */}
           <Link href={"/wishlist"}>
             <CiHeart className="text-2xl text-neutral-dark font-bold" />
           </Link>
           {/* User profile */}
-          <div
-            className="relative me-4 py-4"
-            onMouseEnter={handleProfileEnter}
-            onMouseLeave={handleProfileLeave}
-          >
-            <div className="flex items-center space-x-2 cursor-pointer">
+          <div className="relative me-4 py-4">
+            <div
+              className="flex items-center space-x-2 cursor-pointer"
+              onClick={() => setIsProfileOpen(!isProfileOpen)}
+            >
               <CiUser className="text-2xl text-neutral-dark font-bold" />
             </div>
             {isProfileOpen && (
