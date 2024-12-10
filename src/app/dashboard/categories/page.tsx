@@ -1,598 +1,633 @@
 "use client";
+import React, { useState, ChangeEvent, useRef, useEffect } from "react";
 
-import React, { useState, useRef } from "react";
-import Image from "next/image";
-
-// Interfaces
-interface Subcategory {
+// Types
+interface Gender {
   id: string;
-  name: string;
+  name: "Men" | "Women" | "Juniors";
+  image: string;
 }
 
 interface Category {
   id: string;
   name: string;
-  image: File | null;
-  subcategories: Subcategory[];
+  genderId: string;
+  image: string;
+  subcategories: Subcategory[]; // Added to store subcategories directly
 }
 
-type Gender = "men" | "women" | "juniors";
+interface Subcategory {
+  id: string;
+  name: string;
+  categoryId: string;
+  genderId: string;
+}
 
-export default function CategoryManagementPage() {
-  const [activeTab, setActiveTab] = useState<Gender>("men");
-  // const [isEditingCategory, setIsEditingCategory] = useState(false);
-  // const [isEditingSubcategory, setIsEditingSubcategory] = useState(false);
-  const [genderImages, setGenderImages] = useState<{
-    men: File | null;
-    women: File | null;
-    juniors: File | null;
-  }>({
-    men: null,
-    women: null,
-    juniors: null,
-  });
+const CategoryManagement: React.FC = () => {
+  // Predefined genders with placeholder images
+  const initialGenders: Gender[] = [
+    { id: "1", name: "Men", image: "/men-cover.png" },
+    { id: "2", name: "Women", image: "/women-cover.png" },
+    { id: "3", name: "Juniors", image: "/juniors-cover.png" },
+  ];
 
-  const [categories, setCategories] = useState<{
-    men: Category[];
-    women: Category[];
-    juniors: Category[];
-  }>({
-    men: [],
-    women: [],
-    juniors: [],
-  });
+  // Load persisted data from local storage
+  const [genders] = useState<Gender[]>(initialGenders);
+  const [categories, setCategories] = useState<Category[]>([]);
 
-  const [newCategory, setNewCategory] = useState({
-    name: "",
-    image: null as File | null,
-  });
+  // Form state
+  const [selectedGender, setSelectedGender] = useState<string>("");
+  const [newCategoryName, setNewCategoryName] = useState<string>("");
+  const [newCategoryImage, setNewCategoryImage] = useState<string>("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [newSubcategoryName, setNewSubcategoryName] = useState<string>("");
 
-  const [editingCategory, setEditingCategory] = useState<{
-    id: string | null;
-    name: string;
-    image: File | null;
-  }>({
-    id: null,
-    name: "",
-    image: null,
-  });
+  // Edit mode states
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [editingSubcategory, setEditingSubcategory] =
+    useState<Subcategory | null>(null);
 
-  const [editingSubcategory, setEditingSubcategory] = useState<{
-    categoryId: string | null;
-    subcategoryId: string | null;
-    name: string;
-  }>({
-    categoryId: null,
-    subcategoryId: null,
-    name: "",
-  });
+  // Delete confirmation states
+  const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
+  const [subcategoryToDelete, setSubcategoryToDelete] = useState<{
+    categoryId: string;
+    subcategoryId: string;
+  } | null>(null);
 
-  const [newSubcategory, setNewSubcategory] = useState({
-    categoryId: "",
-    name: "",
-  });
+  // Ref for file input
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Refs for file inputs
-  const genderImageInputRef = useRef<HTMLInputElement>(null);
-  const categoryImageInputRef = useRef<HTMLInputElement>(null);
+  // Update local storage when categories change
+  useEffect(() => {
+    localStorage.setItem("categories", JSON.stringify(categories));
+  }, [categories]);
 
-  // Gender Image Upload Handler
-  const handleGenderImageUpload = (gender: Gender, file: File) => {
-    setGenderImages((prev) => ({
-      ...prev,
-      [gender]: file,
-    }));
-  };
+  // Reset state when gender changes
+  useEffect(() => {
+    setSelectedCategory("");
+    setNewSubcategoryName("");
+    setNewCategoryName("");
+    setNewCategoryImage("");
+    setEditingCategory(null);
+    setEditingSubcategory(null);
+  }, [selectedGender]);
 
-  // Category Image Upload Handler
-  const handleCategoryImageUpload = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = e.target.files?.[0];
+  // Image upload handler
+  const handleImageUpload = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (file) {
-      setNewCategory((prev) => ({
-        ...prev,
-        image: file,
-      }));
-      setEditingCategory((prev) => ({
-        ...prev,
-        image: file,
-      }));
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        // Convert image to base64 string
+        const base64String = reader.result as string;
+        setNewCategoryImage(base64String);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  // Add Category Handler
+  // Trigger file input
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
+
+  // Add Category
   const handleAddCategory = () => {
-    if (!newCategory.name || !newCategory.image) {
-      alert("Please enter category name and upload image");
-      return;
-    }
+    if (selectedGender && newCategoryName && newCategoryImage) {
+      const newCategory: Category = {
+        id: `cat-${Date.now()}`, // Use timestamp to ensure unique ID
+        name: newCategoryName,
+        genderId: selectedGender,
+        image: newCategoryImage,
+        subcategories: [], // Initialize with empty subcategories array
+      };
 
-    const newCategoryItem = {
-      id: Date.now().toString(),
-      name: newCategory.name,
-      image: newCategory.image,
-      subcategories: [],
-    };
+      setCategories([...categories, newCategory]);
 
-    setCategories((prev) => ({
-      ...prev,
-      [activeTab]: [...prev[activeTab], newCategoryItem],
-    }));
-
-    // Reset form
-    setNewCategory({
-      name: "",
-      image: null,
-    });
-    if (categoryImageInputRef.current) {
-      categoryImageInputRef.current.value = "";
+      // Reset form
+      setNewCategoryName("");
+      setNewCategoryImage("");
     }
   };
 
   // Edit Category Handler
-  const handleEditCategory = () => {
-    if (!editingCategory.id || !editingCategory.name) {
-      alert("Please enter category name");
-      return;
-    }
-
-    const updatedCategories = categories[activeTab].map((category) =>
-      category.id === editingCategory.id
-        ? {
-            ...category,
-            name: editingCategory.name,
-            image: editingCategory.image || category.image,
-          }
-        : category
-    );
-
-    setCategories((prev) => ({
-      ...prev,
-      [activeTab]: updatedCategories,
-    }));
-
-    // Reset editing state
-    setEditingCategory({
-      id: null,
-      name: "",
-      image: null,
-    });
+  const handleEditCategory = (category: Category) => {
+    setEditingCategory(category);
+    setNewCategoryName(category.name);
+    setNewCategoryImage(category.image);
   };
 
-  // Add Subcategory Handler
-  const handleAddSubcategory = () => {
-    if (!newSubcategory.categoryId || !newSubcategory.name) {
-      alert("Please select a category and enter subcategory name");
-      return;
+  // Update Category Handler
+  const handleUpdateCategory = () => {
+    if (editingCategory && newCategoryName && newCategoryImage) {
+      const updatedCategories = categories.map((cat) =>
+        cat.id === editingCategory.id
+          ? { ...cat, name: newCategoryName, image: newCategoryImage }
+          : cat
+      );
+
+      setCategories(updatedCategories);
+      setEditingCategory(null);
+      setNewCategoryName("");
+      setNewCategoryImage("");
     }
+  };
 
-    const updatedCategories = categories[activeTab].map((category) => {
-      if (category.id === newSubcategory.categoryId) {
-        return {
-          ...category,
-          subcategories: [
-            ...category.subcategories,
-            {
-              id: Date.now().toString(),
-              name: newSubcategory.name,
-            },
-          ],
-        };
-      }
-      return category;
-    });
+  // Delete Category Confirmation
+  const confirmDeleteCategory = (categoryId: string) => {
+    setCategoryToDelete(categoryId);
+  };
 
-    setCategories((prev) => ({
-      ...prev,
-      [activeTab]: updatedCategories,
-    }));
+  // Delete Category Handler
+  const handleDeleteCategory = () => {
+    if (categoryToDelete) {
+      const updatedCategories = categories.filter(
+        (cat) => cat.id !== categoryToDelete
+      );
+      setCategories(updatedCategories);
+      setSelectedCategory("");
+      setCategoryToDelete(null);
+    }
+  };
 
-    // Reset subcategory form
-    setNewSubcategory({
-      categoryId: "",
-      name: "",
-    });
+  // Add Subcategory
+  const handleAddSubcategory = () => {
+    if (selectedCategory && newSubcategoryName) {
+      // Find the category to update
+      const updatedCategories = categories.map((category) => {
+        if (category.id === selectedCategory) {
+          // Check for duplicate subcategory
+          const isDuplicate = category.subcategories.some(
+            (subcat) =>
+              subcat.name.toLowerCase() === newSubcategoryName.toLowerCase()
+          );
+
+          if (isDuplicate) {
+            alert("This subcategory already exists for the selected category!");
+            return category;
+          }
+
+          // Create new subcategory
+          const newSubcategory: Subcategory = {
+            id: `subcat-${Date.now()}`,
+            name: newSubcategoryName,
+            categoryId: selectedCategory,
+            genderId: selectedGender,
+          };
+
+          // Return updated category with new subcategory
+          return {
+            ...category,
+            subcategories: [...category.subcategories, newSubcategory],
+          };
+        }
+        return category;
+      });
+
+      // Update categories state
+      setCategories(updatedCategories);
+
+      // Reset form
+      setNewSubcategoryName("");
+    }
   };
 
   // Edit Subcategory Handler
-  const handleEditSubcategory = () => {
-    if (
-      !editingSubcategory.categoryId ||
-      !editingSubcategory.subcategoryId ||
-      !editingSubcategory.name
-    ) {
-      alert("Please select a category, subcategory, and enter a name");
-      return;
+  const handleEditSubcategory = (
+    category: Category,
+    subcategory: Subcategory
+  ) => {
+    setEditingCategory(category);
+    setEditingSubcategory(subcategory);
+    setNewSubcategoryName(subcategory.name);
+  };
+
+  // Update Subcategory Handler
+  const handleUpdateSubcategory = () => {
+    if (editingCategory && editingSubcategory && newSubcategoryName) {
+      const updatedCategories = categories.map((cat) => {
+        if (cat.id === editingCategory.id) {
+          return {
+            ...cat,
+            subcategories: cat.subcategories.map((subcat) =>
+              subcat.id === editingSubcategory.id
+                ? { ...subcat, name: newSubcategoryName }
+                : subcat
+            ),
+          };
+        }
+        return cat;
+      });
+
+      setCategories(updatedCategories);
+      setEditingCategory(null);
+      setEditingSubcategory(null);
+      setNewSubcategoryName("");
     }
+  };
 
-    const updatedCategories = categories[activeTab].map((category) => {
-      if (category.id === editingSubcategory.categoryId) {
-        return {
-          ...category,
-          subcategories: category.subcategories.map((subcategory) =>
-            subcategory.id === editingSubcategory.subcategoryId
-              ? { ...subcategory, name: editingSubcategory.name }
-              : subcategory
-          ),
-        };
-      }
-      return category;
-    });
+  // Delete Subcategory Confirmation
+  const confirmDeleteSubcategory = (
+    categoryId: string,
+    subcategoryId: string
+  ) => {
+    setSubcategoryToDelete({ categoryId, subcategoryId });
+  };
 
-    setCategories((prev) => ({
-      ...prev,
-      [activeTab]: updatedCategories,
-    }));
+  // Delete Subcategory Handler
+  const handleDeleteSubcategory = () => {
+    if (subcategoryToDelete) {
+      const updatedCategories = categories.map((cat) => {
+        if (cat.id === subcategoryToDelete.categoryId) {
+          return {
+            ...cat,
+            subcategories: cat.subcategories.filter(
+              (subcat) => subcat.id !== subcategoryToDelete.subcategoryId
+            ),
+          };
+        }
+        return cat;
+      });
 
-    // Reset editing state
-    setEditingSubcategory({
-      categoryId: null,
-      subcategoryId: null,
-      name: "",
-    });
+      setCategories(updatedCategories);
+      setSubcategoryToDelete(null);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-xl p-6">
-        {/* Header */}
-        <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center">
+    <div className="min-h-screen bg-gray-100 p-8">
+      <div className="max-w-6xl mx-auto">
+        <h1 className="text-3xl font-bold mb-8 text-center">
           Category Management
         </h1>
 
-        {/* Gender Tabs */}
-        <div className="flex justify-center mb-6 space-x-4">
-          {(["men", "women", "juniors"] as Gender[]).map((gender) => (
-            <button
-              key={gender}
+        {/* Gender Selection */}
+        <div className="grid grid-cols-3 gap-6 mb-8">
+          {genders.map((gender) => (
+            <div
+              key={gender.id}
+              onClick={() => setSelectedGender(gender.id)}
               className={`
-                px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-300 w-full
-                ${
-                  activeTab === gender
-                    ? "bg-primary text-white shadow-md"
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                }
+                relative cursor-pointer rounded-lg overflow-hidden shadow-lg
+                transition-all duration-300 transform hover:scale-105
+                ${selectedGender === gender.id ? "ring-4 ring-blue-500" : ""}
               `}
-              onClick={() => setActiveTab(gender)}
             >
-              {gender.charAt(0).toUpperCase() + gender.slice(1)}
-            </button>
+              <img
+                src={gender.image}
+                alt={gender.name}
+                className="w-full h-64 object-cover"
+              />
+              <div className="absolute bottom-0 w-full bg-black bg-opacity-50 text-white text-center py-2">
+                {gender.name}
+              </div>
+            </div>
           ))}
         </div>
 
-        {/* Gender Image Upload */}
-        <div className="mb-6 bg-gray-100 p-4 rounded-lg">
-          <h2 className="text-xl font-semibold text-gray-700 mb-4">
-            Upload {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}{" "}
-            Gender Image
-          </h2>
-          <div className="flex items-center space-x-4">
-            <input
-              ref={genderImageInputRef}
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) handleGenderImageUpload(activeTab, file);
-              }}
-              className="text-sm text-gray-500 
-                file:mr-4 file:py-2 file:px-4
-                file:rounded-full file:border-0
-                file:text-sm file:font-semibold
-                file:bg-primary-light file:text-primary-dark"
-            />
-            {genderImages[activeTab] && (
-              <Image
-                src={URL.createObjectURL(genderImages[activeTab]!)}
-                alt={`${activeTab} Gender`}
-                width={100}
-                height={100}
-                className="rounded-lg shadow-md"
-              />
-            )}
-          </div>
-        </div>
-
-        {/* Add Category Section */}
-        <div className="mb-6 bg-gray-100 p-4 rounded-lg">
-          <h2 className="text-xl font-semibold text-gray-700 mb-4">
-            Add New {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}{" "}
-            Category
-          </h2>
-          <div className="flex space-x-4">
-            <input
-              type="text"
-              placeholder="Category Name"
-              value={newCategory.name}
-              onChange={(e) =>
-                setNewCategory((prev) => ({
-                  ...prev,
-                  name: e.target.value,
-                }))
-              }
-              className="flex-grow px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:outline-none"
-            />
-            <input
-              ref={categoryImageInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleCategoryImageUpload}
-              className="text-sm text-gray-500 
-                file:mr-4 file:py-2 file:px-4
-                file:rounded-full file:border-0
-                file:text-sm file:font-semibold
-                file:bg-primary-light file:text-primary-dark"
-            />
-            <button
-              onClick={handleAddCategory}
-              className="bg-primary text-white px-6 py-2 rounded-xl hover:bg-primary-dark transition-colors"
-            >
-              Add Category
-            </button>
-          </div>
-          {newCategory.image && (
-            <Image
-              src={URL.createObjectURL(newCategory.image)}
-              alt="Category Preview"
-              width={100}
-              height={100}
-              className="rounded-lg shadow-md mt-4"
-            />
-          )}
-        </div>
-
-        {/* Add Subcategory Section */}
-        <div className="mb-6 bg-gray-100 p-4 rounded-lg">
-          <h2 className="text-xl font-semibold text-gray-700 mb-4">
-            Add Subcategory
-          </h2>
-          <div className="flex space-x-4">
-            <select
-              value={newSubcategory.categoryId}
-              onChange={(e) =>
-                setNewSubcategory((prev) => ({
-                  ...prev,
-                  categoryId: e.target.value,
-                }))
-              }
-              className="flex-grow px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-            >
-              <option value="">Select Category</option>
-              {categories[activeTab].map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-            <input
-              type="text"
-              placeholder="Subcategory Name"
-              value={newSubcategory.name}
-              onChange={(e) =>
-                setNewSubcategory((prev) => ({
-                  ...prev,
-                  name: e.target.value,
-                }))
-              }
-              className="flex-grow px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-            />
-            <button
-              onClick={handleAddSubcategory}
-              className="bg-primary text-white px-6 py-2 rounded-xl hover:bg-primary-dark transition-colors"
-            >
-              Add Subcategory
-            </button>
-          </div>
-        </div>
-
-        {/* Categories Display Section */}
-        <div>
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-            {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Categories
-          </h2>
-          {categories[activeTab].map((category) => (
-            <div
-              key={category.id}
-              className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 mb-4 flex flex-col"
-            >
-              {editingCategory.id === category.id ? (
-                // Edit Category Mode
-                <div className="flex items-center space-x-4">
+        {/* Category and Subcategory Creation */}
+        {selectedGender && (
+          <div className="bg-white shadow-md rounded-lg p-6 mb-8">
+            <div className="grid grid-cols-2 gap-6">
+              {/* Category Creation Section */}
+              <div>
+                <h2 className="text-2xl font-semibold mb-4">Create Category</h2>
+                <div className="space-y-4">
                   <input
                     type="text"
-                    value={editingCategory.name}
-                    onChange={(e) =>
-                      setEditingCategory((prev) => ({
-                        ...prev,
-                        name: e.target.value,
-                      }))
-                    }
-                    className="flex-grow px-4 py-2 border border-gray-300 rounded-md"
+                    placeholder="Category Name"
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    className="w-full border rounded p-2"
                   />
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleCategoryImageUpload}
-                    className="text-sm text-gray-500 
-                      file:mr-4 file:py-2 file:px-4
-                      file:rounded-full file:border-0
-                      file:text-sm file:font-semibold
-                      file:bg-indigo-50 file:text-indigo-700
-                      hover:file:bg-indigo-100"
-                  />
-                  <div className="flex space-x-2">
-                    <button
-                      className="bg-green-500 text-white px-4 py-2 rounded-full hover:bg-green-600"
-                      onClick={() => {
-                        handleEditCategory();
-                        setEditingCategory({ id: null, name: "", image: null });
-                      }}
-                    >
-                      Save
-                    </button>
-                    <button
-                      className="bg-gray-300 text-gray-700 px-4 py-2 rounded-full hover:bg-gray-400"
-                      onClick={() =>
-                        setEditingCategory({ id: null, name: "", image: null })
-                      }
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                // Normal Category Display
-                <div className="flex items-center space-x-4">
-                  {category.image && (
-                    <Image
-                      src={URL.createObjectURL(category.image)}
-                      alt={category.name}
-                      width={60}
-                      height={60}
-                      className="rounded-lg shadow-md"
+                  <div className="relative">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleImageUpload}
+                      accept="image/*"
+                      className="hidden"
                     />
-                  )}
-                  <div className="flex-grow">
-                    <h3 className="text-lg font-medium text-gray-800">
-                      {category.name}
-                    </h3>
-                  </div>
-                  <div className="flex space-x-2">
                     <button
-                      className="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition-colors"
-                      onClick={() =>
-                        setEditingCategory({
-                          id: category.id,
-                          name: category.name,
-                          image: category.image,
-                        })
-                      }
+                      onClick={triggerFileInput}
+                      className="w-full bg-gray-200 text-gray-700 rounded p-2 hover:bg-gray-300"
+                    >
+                      {newCategoryImage ? "Image Selected" : "Upload Image"}
+                    </button>
+                  </div>
+                  <button
+                    onClick={handleAddCategory}
+                    className="w-full bg-blue-500 text-white rounded p-2 hover:bg-blue-600"
+                    disabled={!newCategoryName || !newCategoryImage}
+                  >
+                    Add Category
+                  </button>
+                </div>
+                {newCategoryImage && (
+                  <div className="mt-4 flex justify-center">
+                    <img
+                      src={newCategoryImage}
+                      alt="Preview"
+                      className="max-w-full h-48 object-cover rounded"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Subcategory Creation Section */}
+              <div>
+                <h2 className="text-2xl font-semibold mb-4">
+                  Create Subcategory
+                </h2>
+                {categories.filter((cat) => cat.genderId === selectedGender)
+                  .length > 0 ? (
+                  <div className="space-y-4">
+                    <select
+                      value={selectedCategory}
+                      onChange={(e) => setSelectedCategory(e.target.value)}
+                      className="w-full border rounded p-2"
+                    >
+                      <option value="">Select Category</option>
+                      {categories
+                        .filter((cat) => cat.genderId === selectedGender)
+                        .map((category) => (
+                          <option key={category.id} value={category.id}>
+                            {category.name}
+                          </option>
+                        ))}
+                    </select>
+                    <input
+                      type="text"
+                      placeholder="Subcategory Name"
+                      value={newSubcategoryName}
+                      onChange={(e) => setNewSubcategoryName(e.target.value)}
+                      className="w-full border rounded p-2"
+                    />
+                    <button
+                      onClick={handleAddSubcategory}
+                      className="w-full bg-green-500 text-white rounded p-2 hover:bg-green-600"
+                      disabled={!selectedCategory || !newSubcategoryName}
+                    >
+                      Add Subcategory
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-center">
+                    Please create a category first
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Categories and Subcategories List */}
+        {selectedGender && (
+          <div className="grid grid-cols-4 gap-6 mb-8">
+            {categories
+              .filter((cat) => cat.genderId === selectedGender)
+              .map((category) => (
+                <div
+                  key={category.id}
+                  className={`
+                    relative rounded-lg overflow-hidden shadow-lg
+                    ${
+                      selectedCategory === category.id
+                        ? "ring-4 ring-green-500"
+                        : ""
+                    }
+                  `}
+                >
+                  {/* Edit and Delete Buttons for Category */}
+                  <div className="absolute top-2 right-2 flex space-x-2 z-10">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditCategory(category);
+                      }}
+                      className="bg-yellow-500 text-white p-1 rounded text-xs"
                     >
                       Edit
                     </button>
                     <button
-                      className="bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-600 transition-colors"
-                      onClick={() => {
-                        setCategories((prev) => ({
-                          ...prev,
-                          [activeTab]: prev[activeTab].filter(
-                            (cat) => cat.id !== category.id
-                          ),
-                        }));
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        confirmDeleteCategory(category.id);
                       }}
+                      className="bg-red-500 text-white p-1 rounded text-xs"
                     >
                       Delete
                     </button>
                   </div>
-                </div>
-              )}
 
-              {/* Subcategories Display */}
-              {category.subcategories.length > 0 && (
-                <div className="mt-4 space-y-2">
-                  <h4 className="text-md font-semibold text-gray-700">
-                    Subcategories:
-                  </h4>
-                  {category.subcategories.map((subcategory) => (
-                    <div
-                      key={subcategory.id}
-                      className="flex justify-between items-center bg-gray-100 p-2 rounded-md"
-                    >
-                      {editingSubcategory.subcategoryId === subcategory.id ? (
-                        // Edit Subcategory Mode
-                        <div className="flex w-full items-center space-x-2">
-                          <input
-                            type="text"
-                            value={editingSubcategory.name}
-                            onChange={(e) =>
-                              setEditingSubcategory((prev) => ({
-                                ...prev,
-                                name: e.target.value,
-                              }))
-                            }
-                            className="flex-grow px-2 py-1 border border-gray-300 rounded-md"
+                  {/* Category Edit Mode */}
+                  {editingCategory && editingCategory.id === category.id && (
+                    <div className="absolute inset-0 bg-white bg-opacity-90 p-4 z-20">
+                      <input
+                        type="text"
+                        value={newCategoryName}
+                        onChange={(e) => setNewCategoryName(e.target.value)}
+                        className="w-full border rounded p-2 mb-2"
+                        placeholder="Category Name"
+                      />
+                      <div className="relative mb-2">
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          onChange={handleImageUpload}
+                          accept="image/*"
+                          className="hidden"
+                        />
+                        <button
+                          onClick={triggerFileInput}
+                          className="w-full bg-gray-200 text-gray-700 rounded p-2 hover:bg-gray-300"
+                        >
+                          {newCategoryImage
+                            ? "Change Image"
+                            : "Upload New Image"}
+                        </button>
+                      </div>
+                      {newCategoryImage && (
+                        <div className="flex justify-center mb-2">
+                          <img
+                            src={newCategoryImage}
+                            alt="Preview"
+                            className="max-w-full h-32 object-cover rounded"
                           />
-                          <button
-                            className="bg-green-500 text-white px-3 py-1 rounded-full text-sm hover:bg-green-600"
-                            onClick={() => {
-                              handleEditSubcategory();
-                              setEditingSubcategory({
-                                categoryId: null,
-                                subcategoryId: null,
-                                name: "",
-                              });
-                            }}
-                          >
-                            Save
-                          </button>
-                          <button
-                            className="bg-gray-300 text-gray-700 px-3 py-1 rounded-full text-sm hover:bg-gray-400"
-                            onClick={() =>
-                              setEditingSubcategory({
-                                categoryId: null,
-                                subcategoryId: null,
-                                name: "",
-                              })
-                            }
-                          >
-                            Cancel
-                          </button>
                         </div>
-                      ) : (
-                        // Normal Subcategory Display
-                        <>
-                          <span className="text-gray-800">
-                            {subcategory.name}
-                          </span>
-                          <div className="flex space-x-2">
-                            <button
-                              className="bg-blue-500 text-white px-3 py-1 rounded-full text-sm hover:bg-blue-600 transition-colors"
-                              onClick={() =>
-                                setEditingSubcategory({
-                                  categoryId: category.id,
-                                  subcategoryId: subcategory.id,
-                                  name: subcategory.name,
-                                })
-                              }
-                            >
-                              Edit
-                            </button>
-                            <button
-                              className="bg-red-500 text-white px-3 py-1 rounded-full text-sm hover:bg-red-600 transition-colors"
-                              onClick={() => {
-                                const updatedCategories = categories[
-                                  activeTab
-                                ].map((cat) => {
-                                  if (cat.id === category.id) {
-                                    return {
-                                      ...cat,
-                                      subcategories: cat.subcategories.filter(
-                                        (sub) => sub.id !== subcategory.id
-                                      ),
-                                    };
-                                  }
-                                  return cat;
-                                });
-                                setCategories((prev) => ({
-                                  ...prev,
-                                  [activeTab]: updatedCategories,
-                                }));
-                              }}
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </>
                       )}
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={handleUpdateCategory}
+                          className="w-full bg-blue-500 text-white rounded p-2 hover:bg-blue-600"
+                        >
+                          Save Changes
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingCategory(null);
+                            setNewCategoryName("");
+                            setNewCategoryImage("");
+                          }}
+                          className="w-full bg-gray-500 text-white rounded p-2 hover:bg-gray-600"
+                        >
+                          Cancel
+                        </button>
+                      </div>
                     </div>
-                  ))}
+                  )}
+
+                  {/* Category Delete Confirmation */}
+                  {categoryToDelete === category.id && (
+                    <div className="absolute inset-0 bg-white bg-opacity-90 p-4 z-20 flex flex-col justify-center items-center">
+                      <p className="mb-4 text-center">
+                        Are you sure you want to delete the category "
+                        {category.name}"?
+                      </p>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={handleDeleteCategory}
+                          className="bg-red-500 text-white rounded p-2 hover:bg-red-600"
+                        >
+                          Confirm Delete
+                        </button>
+                        <button
+                          onClick={() => setCategoryToDelete(null)}
+                          className="bg-gray-500 text-white rounded p-2 hover:bg-gray-600"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  <div
+                    onClick={() => setSelectedCategory(category.id)}
+                    className="cursor-pointer"
+                  >
+                    <div className="absolute top-0 w-full bg-black bg-opacity-50 text-white text-center py-2">
+                      {category.name}
+                    </div>
+                    <img
+                      src={category.image}
+                      alt={category.name}
+                      className="w-full h-48 object-cover mt-8"
+                    />
+                  </div>
+
+                  {/* Subcategories List */}
+                  {category.subcategories.length > 0 && (
+                    <div className="p-2 bg-white">
+                      <h3 className="font-semibold mb-2">Subcategories:</h3>
+                      <ul className="space-y-1">
+                        {category.subcategories.map((subcategory) => (
+                          <li
+                            key={subcategory.id}
+                            className="bg-gray-100 rounded px-2 py-1 text-sm flex justify-between items-center relative"
+                          >
+                            {/* Subcategory Name */}
+                            <span>{subcategory.name}</span>
+
+                            {/* Subcategory Edit and Delete Buttons */}
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditSubcategory(category, subcategory);
+                                }}
+                                className="text-yellow-500 text-xs"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  confirmDeleteSubcategory(
+                                    category.id,
+                                    subcategory.id
+                                  );
+                                }}
+                                className="text-red-500 text-xs"
+                              >
+                                Delete
+                              </button>
+                            </div>
+
+                            {/* Subcategory Edit Mode */}
+                            {editingCategory &&
+                              editingSubcategory &&
+                              editingCategory.id === category.id &&
+                              editingSubcategory.id === subcategory.id && (
+                                <div className="absolute inset-0 bg-white bg-opacity-95 p-2 z-30 flex items-center">
+                                  <input
+                                    type="text"
+                                    value={newSubcategoryName}
+                                    onChange={(e) =>
+                                      setNewSubcategoryName(e.target.value)
+                                    }
+                                    className="flex-grow border rounded p-1 mr-2"
+                                    placeholder="Subcategory Name"
+                                  />
+                                  <div className="flex space-x-1">
+                                    <button
+                                      onClick={handleUpdateSubcategory}
+                                      className="bg-blue-500 text-white rounded p-1 text-xs"
+                                    >
+                                      Save
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setEditingCategory(null);
+                                        setEditingSubcategory(null);
+                                        setNewSubcategoryName("");
+                                      }}
+                                      className="bg-gray-500 text-white rounded p-1 text-xs"
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+
+                            {/* Subcategory Delete Confirmation */}
+                            {subcategoryToDelete &&
+                              subcategoryToDelete.categoryId === category.id &&
+                              subcategoryToDelete.subcategoryId ===
+                                subcategory.id && (
+                                <div className="absolute inset-0 bg-white bg-opacity-95 p-2 z-30 flex flex-col justify-center items-center">
+                                  <p className="mb-2 text-sm text-center">
+                                    Delete "{subcategory.name}"?
+                                  </p>
+                                  <div className="flex space-x-2">
+                                    <button
+                                      onClick={handleDeleteSubcategory}
+                                      className="bg-red-500 text-white rounded p-1 text-xs"
+                                    >
+                                      Confirm
+                                    </button>
+                                    <button
+                                      onClick={() =>
+                                        setSubcategoryToDelete(null)
+                                      }
+                                      className="bg-gray-500 text-white rounded p-1 text-xs"
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          ))}
-        </div>
+              ))}
+          </div>
+        )}
       </div>
     </div>
   );
-}
+};
+
+export default CategoryManagement;
