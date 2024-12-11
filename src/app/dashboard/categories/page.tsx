@@ -481,8 +481,8 @@ const CategoryManagement: React.FC = () => {
                   {categoryToDelete === category.id && (
                     <div className="absolute inset-0 bg-white bg-opacity-90 p-4 z-20 flex flex-col justify-center items-center">
                       <p className="mb-4 text-center">
-                        Are you sure you want to delete the category "
-                        {category.name}"?
+                        Are you sure you want to delete the category
+                        {category.name}?
                       </p>
                       <div className="flex space-x-2">
                         <button
@@ -596,7 +596,7 @@ const CategoryManagement: React.FC = () => {
                                 subcategory.id && (
                                 <div className="absolute inset-0 bg-white bg-opacity-95 p-2 z-30 flex flex-col justify-center items-center">
                                   <p className="mb-2 text-sm text-center">
-                                    Delete "{subcategory.name}"?
+                                    Delete {subcategory.name}?
                                   </p>
                                   <div className="flex space-x-2">
                                     <button
