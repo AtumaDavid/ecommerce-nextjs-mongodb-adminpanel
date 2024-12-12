@@ -240,7 +240,7 @@ const DashboardPage = () => {
 
       {/* top products */}
       <section>
-        <ProductCard isWishListed={false} data={products} />
+        {/* <ProductCard isWishListed={false} data={products} /> */}
       </section>
     </div>
   );

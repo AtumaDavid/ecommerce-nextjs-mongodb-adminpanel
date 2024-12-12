@@ -1,13 +1,55 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { MdOutlineKeyboardArrowRight } from "react-icons/md";
 import { FaHeart, FaShoppingBag, FaStar } from "react-icons/fa";
 import ProductCard from "@/components/Product/ProductCard";
 import ProductDetails from "@/components/Product/ProductDetails";
+import { useParams } from "next/navigation";
+import axiosInstance from "@/lib/axiosInstance";
 
+interface Product {
+  id?: string;
+  name: string;
+  slug: string;
+  images: string[];
+  sellingPrice: string;
+  originalPrice?: string;
+  price?: string;
+  offer?: {
+    discountPercentage?: number;
+  };
+}
 export default function ProductDetail() {
+  const params = useParams();
+  const [product, setProduct] = useState<Product | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string>("");
+  const [quantity, setQuantity] = useState(1);
+  const [selectedColor, setSelectedColor] = useState("");
+  const [selectedSize, setSelectedSize] = useState("");
+
+  const fetchedProduct = async () => {
+    await axiosInstance.get(`/products/${params?.slug}/byslug`).then((data) => {
+      if (data?.data?.status) {
+        setProduct(data?.data?.data);
+      }
+    });
+  };
+
+  useEffect(() => {
+    fetchedProduct();
+  }, []);
+
+  // When the product is fetched, set the first image as the selected image
+  useEffect(() => {
+    if (product && product.images && product.images.length > 0) {
+      setSelectedImage(product.images[0]);
+    }
+  }, [product]);
+
+  // console.log(product);
+
   const products = [
     {
       title: "Product title",
@@ -40,11 +82,6 @@ export default function ProductDetail() {
       originalPrice: "#70",
     },
   ];
-
-  const [selectedImage, setSelectedImage] = useState("/women-cover.png");
-  const [quantity, setQuantity] = useState(1);
-  const [selectedColor, setSelectedColor] = useState("");
-  const [selectedSize, setSelectedSize] = useState("");
 
   const images = [
     "/women-cover.png",
@@ -88,16 +125,18 @@ export default function ProductDetail() {
           {/* Image Gallery */}
           <div className="space-y-4">
             <div className="aspect-square overflow-hidden rounded-lg bg-gray-100">
-              <Image
-                src={selectedImage}
-                alt="Product image"
-                className="h-full w-full object-cover object-center"
-                width={600}
-                height={600}
-              />
+              {selectedImage && (
+                <img
+                  src={selectedImage}
+                  alt="Product image"
+                  className="h-full w-full object-cover object-center"
+                  width={600}
+                  height={600}
+                />
+              )}
             </div>
             <div className="grid grid-cols-4 gap-4">
-              {images.map((image, index) => (
+              {product?.images?.map((image: string, index: number) => (
                 <button
                   key={index}
                   onClick={() => setSelectedImage(image)}
@@ -105,7 +144,7 @@ export default function ProductDetail() {
                     selectedImage === image ? "ring-2 ring-primary" : ""
                   }`}
                 >
-                  <Image
+                  <img
                     src={image}
                     alt={`Product ${index + 1}`}
                     className="h-full w-full object-cover object-center"
@@ -121,10 +160,32 @@ export default function ProductDetail() {
           <div className="space-y-8">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
-                Classic French Terry Crew
+                {product?.name}
               </h1>
               <div>
-                <p className="mt-4 text-xl text-[#00CA4E]">$450.00</p>
+                {product?.offer?.discountPercentage ? (
+                  <div className="flex items-center gap-3 mt-4">
+                    <p className="text-xl text-[#00CA4E]">
+                      {/* Calculate the discounted price */}
+                      {product.sellingPrice && product.offer?.discountPercentage
+                        ? `₦${(
+                            parseFloat(product.sellingPrice.replace("₦", "")) *
+                            (1 - product.offer.discountPercentage / 100)
+                          ).toFixed(2)}`
+                        : product.sellingPrice}
+                    </p>
+                    <p className="text-base text-gray-500 line-through">
+                      ₦{product.sellingPrice}
+                    </p>
+                    <p className="text-base text-red-500 font-bold">
+                      {product.offer.discountPercentage}% OFF
+                    </p>
+                  </div>
+                ) : (
+                  <p className="mt-4 text-xl text-[#00CA4E]">
+                    {product?.sellingPrice}
+                  </p>
+                )}
                 <span className="flex gap-2 mt-2">
                   <FaStar className="text-yellow-500" />
                   <FaStar className="text-yellow-500" />
@@ -242,7 +303,7 @@ export default function ProductDetail() {
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
             Related Products
           </h2>
-          <ProductCard isWishListed={false} data={products} />
+          {/* <ProductCard isWishListed={false} data={products} /> */}
         </div>
       </div>
     </div>

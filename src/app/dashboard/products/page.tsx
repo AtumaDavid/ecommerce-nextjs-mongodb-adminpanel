@@ -172,10 +172,36 @@ const DashboardProduct = () => {
   // UPDATE PRODUCT
   const handleUpdateProduct = async (productData: ProductFormData) => {
     try {
+      // Fetch the current product to get existing images
+      const currentProductResponse = await axiosInstance.get(
+        `/products/${productData._id}`
+      );
+      const currentProduct = currentProductResponse.data.data;
+
+      // Preserve existing images if not overwritten
+      const existingImages = Array.isArray(currentProduct.images)
+        ? currentProduct.images
+        : currentProduct.images
+        ? [currentProduct.images]
+        : [];
+
+      // Merge existing images with the new image
+      // Merge existing images with the new image
+      const updatedImages = productData.images
+        ? [...new Set([...existingImages, productData.images])].slice(0, 4) // Limit to 4 images
+        : existingImages;
+
+      // Create updated product data with merged images
+      const updatedProductData = {
+        ...productData,
+        images: updatedImages,
+      };
+
       const response = await axiosInstance.put(
         `/products/${productData._id}`,
-        productData
+        updatedProductData
       );
+
       console.log("Product updated:", response.data);
 
       // Update the products state with the updated product
@@ -184,6 +210,7 @@ const DashboardProduct = () => {
           product._id === response.data._id ? response.data : product
         )
       );
+
       setIsSidebarOpen(false);
       setEditingProduct(undefined); // Reset editing product
       fetchProducts();

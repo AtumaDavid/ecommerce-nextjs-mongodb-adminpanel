@@ -1,3 +1,4 @@
+"use client";
 // import Carousel from "@/components/Home/Carousel";
 // import CategoryCarousel from "@/components/Home/CategoryCarousel";
 // import PromotionCard from "@/components/Home/PromotionCard";
@@ -6,10 +7,61 @@ import Carousel from "@/components/Home/Carousel";
 import CategoryCarousel from "@/components/Home/CategoryCarousel";
 import PromotionCard from "@/components/Home/PromotionCard";
 import ProductCard from "@/components/Product/ProductCard";
-import { Suspense } from "react";
+import axiosInstance from "@/lib/axiosInstance";
+import { Suspense, useEffect, useState } from "react";
 import { FaHeadset, FaHeart, FaLock, FaShippingFast } from "react-icons/fa";
 
+interface Product {
+  id?: string;
+  name: string;
+  slug: string;
+  images: string[];
+  sellingPrice: string;
+  originalPrice?: string;
+  price?: string;
+  offer?: {
+    discountPercentage?: number;
+  };
+}
 export default function Home() {
+  const [flashSaleProducts, setFlashSaleProducts] = useState<Product[]>([]);
+
+  const calculateDiscountedPrice = (
+    originalPrice: string,
+    discountPercentage: number
+  ) => {
+    const price = parseFloat(originalPrice);
+    const discount = price * (discountPercentage / 100);
+    return (price - discount).toFixed(2);
+  };
+
+  const processFlashSaleProducts = (products: Product[]): Product[] => {
+    return products.map((product: Product) => ({
+      ...product,
+      originalPrice: product.sellingPrice, // The base selling price becomes the original price
+      price: calculateDiscountedPrice(
+        product.sellingPrice,
+        product.offer?.discountPercentage || 0
+      ),
+    }));
+  };
+
+  const fetchFlashSaleProducts = async () => {
+    await axiosInstance.get("/products/flash-sales").then((data) => {
+      if (data?.data?.status) {
+        // setFlashSaleProducts(data?.data?.data);
+        const processedProducts = processFlashSaleProducts(data?.data?.data);
+        setFlashSaleProducts(processedProducts);
+      }
+      // console.log(data?.data);
+    });
+  };
+  useEffect(() => {
+    fetchFlashSaleProducts();
+  }, []);
+
+  // console.log(flashSaleProducts);
+
   const products = [
     {
       title: "Product title",
@@ -75,7 +127,11 @@ export default function Home() {
         <PromotionCard />
         <div className="xl:container px-2 xl:px-4 mt-10 mx-auto">
           <h2 className="text-3xl font-bold mb-4">Trendy Collections</h2>
-          <ProductCard isWishListed={false} data={products} />
+          {/* <ProductCard isWishListed={false} data={products} /> */}
+        </div>
+        <div className="xl:container px-2 xl:px-4 mt-10 mx-auto">
+          <h2 className="text-3xl font-bold mb-4">Flash Sales</h2>
+          <ProductCard isWishListed={false} data={flashSaleProducts} />
         </div>
 
         {/* services */}

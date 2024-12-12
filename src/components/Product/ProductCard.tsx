@@ -3,10 +3,12 @@ import React from "react";
 import { FaHeart, FaStar } from "react-icons/fa";
 
 interface Product {
-  image: string;
-  title: string;
-  price: string;
+  images: string[];
+  name: string;
+  slug: string;
+  // sellingPrice: string;
   originalPrice?: string;
+  price?: string;
 }
 
 interface ProductCardProps {
@@ -19,7 +21,8 @@ export default function ProductCard({ data, isWishListed }: ProductCardProps) {
       {data?.map((item, index) => (
         <Link
           key={index}
-          href={`/products/${item.title.toLowerCase().replace(/s+/g, "-")}`}
+          href={`/products/${item.slug}`}
+          // href={"#"}
           className="bg-white rounded-lg shadow-md p-2"
         >
           <div className="w-full">
@@ -40,14 +43,14 @@ export default function ProductCard({ data, isWishListed }: ProductCardProps) {
                  
                 /> */}
                 <img
-                  src={item.image}
-                  alt={item.title}
+                  src={item.images?.[0]}
+                  alt={item.name}
                   className="rounded-xl w-full h-56 object-cover transform scale-100 hover:scale-105 transition duration-500 ease-in-out"
                 />
               </div>
             </div>
             <div className="p-4">
-              <h2 className="text-lg font-semibold">{item?.title}</h2>
+              <h2 className="text-lg font-semibold">{item?.name}</h2>
               <div className="my-2 flex items-center">
                 <FaStar className="text-yellow-500" />
                 <FaStar className="text-yellow-500" />
