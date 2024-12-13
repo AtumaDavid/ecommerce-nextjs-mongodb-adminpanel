@@ -3,73 +3,122 @@ import React from "react";
 import { FaHeart, FaStar } from "react-icons/fa";
 
 interface Product {
-  images: string[];
-  name: string;
-  slug: string;
-  // sellingPrice: string;
-  originalPrice?: string;
-  price?: string;
+  product?: {
+    images: string[];
+    name: string;
+    slug: string;
+    sellingPrice?: string | number;
+    originalPrice?: string | number;
+    price?: string | number;
+    offer?: {
+      discountPercentage?: number;
+    };
+  };
+  images?: string[];
+  name?: string;
+  slug?: string;
+  sellingPrice?: string | number;
+  originalPrice?: string | number;
+  price?: string | number;
+  offer?: {
+    discountPercentage?: number;
+  };
 }
 
 interface ProductCardProps {
   data: Product[];
   isWishListed?: boolean;
 }
+
 export default function ProductCard({ data, isWishListed }: ProductCardProps) {
   return (
     <div className="grid sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-      {data?.map((item, index) => (
-        <Link
-          key={index}
-          href={`/products/${item.slug}`}
-          // href={"#"}
-          className="bg-white rounded-lg shadow-md p-2"
-        >
-          <div className="w-full">
-            <div className="relative">
-              <span className="absolute top-3 left-3 z-10 bg-neutral-dark text-white text-xs font-bold px-2 py-1 rounded-full">
-                Flash sale
-              </span>
-              <FaHeart
-                size={34}
-                color={`${isWishListed ? "!text-[#ff4800]" : "text-gray-300"}`}
-                className="absolute top-4 right-4 bg-white p-[10px] rounded-full z-10"
-              />
-              <div className="overflow-hidden">
-                {/* <Image
-                  src={item.image}
-                  alt={item.title}
-                  className="rounded-md w-full transform scale-95 hover:scale-100 transition duration-500 ease-in-out"
-                 
-                /> */}
-                <img
-                  src={item.images?.[0]}
-                  alt={item.name}
-                  className="rounded-xl w-full h-56 object-cover transform scale-100 hover:scale-105 transition duration-500 ease-in-out"
+      {data?.map((item, index) => {
+        // Extract the actual product object from the wishlist item
+        const product = item.product || item;
+
+        // Determine if there's an offer
+        const hasOffer =
+          product.offer?.discountPercentage &&
+          product.offer.discountPercentage > 0;
+
+        // Determine prices
+        const originalPrice = product.sellingPrice || product.originalPrice;
+        const discountedPrice = hasOffer
+          ? product.price ||
+            calculateDiscountedPrice(
+              originalPrice as string,
+              product.offer?.discountPercentage || 0
+            )
+          : originalPrice;
+
+        return (
+          <Link
+            key={index}
+            href={`/products/${product.slug}`}
+            className="bg-white rounded-lg shadow-md p-2"
+          >
+            <div className="w-full">
+              <div className="relative">
+                {hasOffer && (
+                  <span className="absolute top-3 left-3 z-10 bg-neutral-dark text-white text-xs font-bold px-2 py-1 rounded-full">
+                    Flash Sale! {""}
+                    {product?.offer?.discountPercentage}% OFF
+                  </span>
+                )}
+                <FaHeart
+                  size={34}
+                  color={`${isWishListed ? "#ff4800" : "text-gray-300"}`}
+                  className="absolute top-4 right-4 bg-white p-[10px] rounded-full z-10"
                 />
+                <div className="overflow-hidden">
+                  <img
+                    src={product.images?.[0]}
+                    alt={product.name}
+                    className="rounded-xl w-full h-56 object-cover transform scale-100 hover:scale-105 transition duration-500 ease-in-out"
+                  />
+                </div>
+              </div>
+              <div className="p-4">
+                <h2 className="text-lg font-semibold">{product?.name}</h2>
+                <div className="my-2 flex items-center">
+                  <FaStar className="text-yellow-500" />
+                  <FaStar className="text-yellow-500" />
+                  <FaStar className="text-yellow-500" />
+                  <FaStar className="text-yellow-500" />
+                  <FaStar className="text-yellow-500" />
+                </div>
+                <div className="flex items-center gap-3">
+                  {hasOffer ? (
+                    <>
+                      <span className="text-2xl font-bold text-black">
+                        ₦{discountedPrice}
+                      </span>
+                      <span className="text-red-500 line-through">
+                        ₦{originalPrice}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-2xl font-bold text-black">
+                      ₦{originalPrice}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
-            <div className="p-4">
-              <h2 className="text-lg font-semibold">{item?.name}</h2>
-              <div className="my-2 flex items-center">
-                <FaStar className="text-yellow-500" />
-                <FaStar className="text-yellow-500" />
-                <FaStar className="text-yellow-500" />
-                <FaStar className="text-yellow-500" />
-                <FaStar className="text-yellow-500" />
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="text-2xl font-bold text-black">
-                  {item?.price}
-                </span>
-                <span className=" text-red-500 line-through">
-                  {item?.originalPrice}
-                </span>
-              </div>
-            </div>
-          </div>
-        </Link>
-      ))}
+          </Link>
+        );
+      })}
     </div>
   );
+}
+
+// Helper function to calculate discounted price
+function calculateDiscountedPrice(
+  originalPrice: string,
+  discountPercentage: number
+): string {
+  const price = parseFloat(originalPrice);
+  const discount = price * (discountPercentage / 100);
+  return (price - discount).toFixed(2);
 }
