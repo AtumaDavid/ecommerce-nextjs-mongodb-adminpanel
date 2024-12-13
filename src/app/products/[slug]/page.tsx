@@ -7,9 +7,10 @@ import ProductCard from "@/components/Product/ProductCard";
 import ProductDetails from "@/components/Product/ProductDetails";
 import { useParams } from "next/navigation";
 import axiosInstance from "@/lib/axiosInstance";
+import { useToast } from "@/context/ToastContext";
 
 export interface ProductDetail {
-  id?: string;
+  _id?: string;
   name: string;
   slug: string;
   images: string[];
@@ -32,6 +33,7 @@ export interface ProductDetail {
   }>;
 }
 export default function ProductDetail() {
+  const { showToast } = useToast();
   const params = useParams();
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [selectedImage, setSelectedImage] = useState<string>("");
@@ -65,6 +67,66 @@ export default function ProductDetail() {
       setQuantity((prev) => Math.min(prev + 1, 10));
     } else {
       setQuantity((prev) => Math.max(prev - 1, 1));
+    }
+  };
+
+  // ADD TO WISHLIST
+  const addToWishList = async () => {
+    // Prevent adding if no product is selected
+    if (!product?._id) {
+      showToast({
+        type: "error",
+        message: "No product selected",
+      });
+      return;
+    }
+
+    try {
+      //  setIsAdding(true); // Add a loading state
+      const response = await axiosInstance.post("/wishlist", {
+        product: product._id,
+      });
+
+      // Check the response status explicitly
+      if (response.data.status) {
+        showToast({
+          type: "success",
+          message: "Product added to wishlist successfully",
+        });
+      } else {
+        // Handle case where status is false (e.g., product already in wishlist)
+        showToast({
+          type: "error",
+          message: response.data.msg || "Failed to add product to wishlist",
+        });
+      }
+    } catch (error: any) {
+      console.error("Wishlist Error:", error);
+
+      // Handle different types of errors
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        showToast({
+          type: "error",
+          message:
+            error.response.data.msg || "Failed to add product to wishlist",
+        });
+      } else if (error.request) {
+        // The request was made but no response was received
+        showToast({
+          type: "error",
+          message: "No response received. Check your network connection.",
+        });
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        showToast({
+          type: "error",
+          message: "An unexpected error occurred",
+        });
+      }
+    } finally {
+      //  setIsAdding(false); // Always reset loading state
     }
   };
 
@@ -278,7 +340,10 @@ export default function ProductDetail() {
                     </div>
                   )}
 
-                <button className="flex items-center justify-center gap-2 px-8 py-4 rounded-full text-base font-medium border border-gray-200 text-gray-700 hover:bg-gray-50 transition-all duration-200">
+                <button
+                  onClick={addToWishList}
+                  className="flex items-center justify-center gap-2 px-8 py-4 rounded-full text-base font-medium border border-gray-200 text-gray-700 hover:bg-gray-50 transition-all duration-200"
+                >
                   <FaHeart className="h-5 w-5" />
                   Favorite
                 </button>
