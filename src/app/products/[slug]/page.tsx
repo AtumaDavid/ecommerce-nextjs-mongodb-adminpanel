@@ -1,5 +1,4 @@
 "use client";
-import Image from "next/image";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { MdOutlineKeyboardArrowRight } from "react-icons/md";
@@ -9,7 +8,7 @@ import ProductDetails from "@/components/Product/ProductDetails";
 import { useParams } from "next/navigation";
 import axiosInstance from "@/lib/axiosInstance";
 
-interface Product {
+export interface ProductDetail {
   id?: string;
   name: string;
   slug: string;
@@ -17,13 +16,24 @@ interface Product {
   sellingPrice: string;
   originalPrice?: string;
   price?: string;
+  description?: string;
   offer?: {
     discountPercentage?: number;
   };
+  shippingReturn?: {
+    returnPolicy?: string;
+    // Add other shipping and return related properties as needed
+  };
+  variations?: Array<{
+    _id?: string;
+    color?: string;
+    size?: string;
+    price?: number;
+  }>;
 }
 export default function ProductDetail() {
   const params = useParams();
-  const [product, setProduct] = useState<Product | null>(null);
+  const [product, setProduct] = useState<ProductDetail | null>(null);
   const [selectedImage, setSelectedImage] = useState<string>("");
   const [quantity, setQuantity] = useState(1);
   const [selectedColor, setSelectedColor] = useState("");
@@ -49,49 +59,6 @@ export default function ProductDetail() {
   }, [product]);
 
   // console.log(product);
-
-  const products = [
-    {
-      title: "Product title",
-      image: "/men-cover.png",
-      price: "#50",
-      originalPrice: "#70",
-    },
-    {
-      title: "Product title",
-      image: "/men-cover.png",
-      price: "#50",
-      originalPrice: "#70",
-    },
-    {
-      title: "Product title",
-      image: "/men-cover.png",
-      price: "#50",
-      originalPrice: "#70",
-    },
-    {
-      title: "Product title",
-      image: "/men-cover.png",
-      price: "#50",
-      originalPrice: "#70",
-    },
-    {
-      title: "Product title",
-      image: "/men-cover.png",
-      price: "#50",
-      originalPrice: "#70",
-    },
-  ];
-
-  const images = [
-    "/women-cover.png",
-    "/men-cover.png",
-    "/juniors-cover.png",
-    "/auth.jpg",
-  ];
-
-  const colors = ["White", "Black", "Orange"];
-  const sizes = ["S", "M", "L", "XL"];
 
   const handleQuantityChange = (action: "increase" | "decrease") => {
     if (action === "increase") {
@@ -197,49 +164,56 @@ export default function ProductDetail() {
             </div>
 
             {/* Color Selection */}
-            <div className="space-y-4">
-              <h2 className="text-lg font-medium text-gray-900">
-                Color: {selectedColor}
-              </h2>
-              <div className="flex flex-wrap gap-3">
-                {colors.map((color) => (
-                  <button
-                    key={color}
-                    onClick={() => setSelectedColor(color)}
-                    className={`px-6 py-2 rounded-full text-sm ${
-                      selectedColor === color
-                        ? "bg-primary text-white"
-                        : "bg-gray-100 hover:bg-gray-200 text-gray-900"
-                    } transition-all duration-200`}
-                  >
-                    {color}
-                  </button>
-                ))}
+            {product?.variations && product.variations.length > 0 && (
+              <div className="space-y-4">
+                <h2 className="text-lg font-medium text-gray-900">
+                  Color: {selectedColor}
+                </h2>
+                <div className="flex flex-wrap gap-3">
+                  {product?.variations?.map((item) => {
+                    return (
+                      <button
+                        key={item?._id}
+                        onClick={() => setSelectedColor(item?.color || "")}
+                        className={`px-6 py-2 rounded-full text-sm ${
+                          selectedColor === item?.color
+                            ? "bg-primary text-white"
+                            : "bg-gray-100 hover:bg-gray-200 text-gray-900"
+                        } transition-all duration-200`}
+                      >
+                        {item?.color}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Size Selection */}
-            <div className="space-y-4">
-              <h2 className="text-lg font-medium text-gray-900">
-                Size: {selectedSize}
-              </h2>
-              <div className="flex flex-wrap gap-3">
-                {sizes.map((size) => (
-                  <button
-                    key={size}
-                    onClick={() => setSelectedSize(size)}
-                    className={`w-14 h-14 flex items-center justify-center rounded-lg text-sm
-                      ${
-                        selectedSize === size
-                          ? "bg-primary text-white"
-                          : "bg-gray-100 hover:bg-gray-200 text-gray-900"
-                      } transition-all duration-200`}
-                  >
-                    {size}
-                  </button>
-                ))}
+            {product?.variations && product.variations.length > 0 && (
+              <div className="space-y-4">
+                <h2 className="text-lg font-medium text-gray-900">
+                  Size: {selectedSize}
+                </h2>
+                <div className="flex flex-wrap gap-3">
+                  {product?.variations?.map((item) => {
+                    return (
+                      <button
+                        key={item?._id}
+                        onClick={() => setSelectedSize(item?.size || "")}
+                        className={`px-6 py-2 rounded-full text-sm ${
+                          selectedSize === item?.size
+                            ? "bg-primary text-white"
+                            : "bg-gray-100 hover:bg-gray-200 text-gray-900"
+                        } transition-all duration-200`}
+                      >
+                        {item?.size}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Quantity */}
             <div className="space-y-4">
@@ -268,24 +242,42 @@ export default function ProductDetail() {
 
             {/* Action Buttons */}
             <div className="space-y-4 pt-4">
-              {!selectedSize || !selectedColor ? (
-                <p className="text-sm text-red-500">
-                  Please select a color and size before adding to the cart.
-                </p>
-              ) : null}
-
               <div className="grid grid-cols-1 gap-4">
                 <button
                   className={`flex items-center justify-center gap-2 px-8 py-4 rounded-full text-base font-medium ${
-                    !selectedSize || !selectedColor
+                    // If variations exist, require selection
+                    product?.variations &&
+                    product.variations.length > 0 &&
+                    (!selectedSize || !selectedColor)
                       ? "bg-gray-300 cursor-not-allowed"
                       : "bg-primary text-white hover:bg-primary/90"
                   } transition-all duration-200`}
-                  disabled={!selectedSize || !selectedColor}
+                  disabled={
+                    // Disable only if variations exist and size/color are not selected
+                    product?.variations &&
+                    product.variations.length > 0 &&
+                    (!selectedSize || !selectedColor)
+                  }
                 >
                   <FaShoppingBag className="h-5 w-5" />
                   Add to Cart
                 </button>
+
+                {/* Conditional warning message */}
+                {product?.variations &&
+                  product.variations.length > 0 &&
+                  (!selectedSize || !selectedColor) && (
+                    <div className="text-red-500 text-sm mt-2 text-center">
+                      Please select{" "}
+                      {!selectedSize && !selectedColor
+                        ? "both size and color"
+                        : !selectedSize
+                        ? "size"
+                        : "color"}{" "}
+                      before adding to cart
+                    </div>
+                  )}
+
                 <button className="flex items-center justify-center gap-2 px-8 py-4 rounded-full text-base font-medium border border-gray-200 text-gray-700 hover:bg-gray-50 transition-all duration-200">
                   <FaHeart className="h-5 w-5" />
                   Favorite
@@ -296,7 +288,7 @@ export default function ProductDetail() {
         </div>
 
         {/* Product Details Tabs */}
-        <ProductDetails />
+        <ProductDetails data={product} />
 
         {/* RELATED PRODUCTS */}
         <div className="mt-8 prose prose-sm max-w-none">

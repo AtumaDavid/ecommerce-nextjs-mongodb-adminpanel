@@ -1,7 +1,12 @@
 "use client";
+import { ProductDetail } from "@/app/products/[slug]/page";
 import React, { useState } from "react";
 
-export default function ProductDetails() {
+interface ProductDetailsProps {
+  data: ProductDetail | null | undefined;
+}
+
+export default function ProductDetails({ data }: ProductDetailsProps) {
   const [activeTab, setActiveTab] = useState("details");
 
   // Tab content components
@@ -9,50 +14,14 @@ export default function ProductDetails() {
     switch (activeTab) {
       case "details":
         return (
-          <div className="mt-8 prose prose-sm max-w-none">
+          <div className="mt-8  max-w-none">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">
               Product Details
             </h2>
-            <p>
-              The Classic French Terry Crew brings super-soft comfort to a style
-              that&apos;s tried and true. It&apos;s a top you&apos;ll want to
-              wear every day, and it&apos;s comfortable and durable enough that
-              you can.
-            </p>
-
-            <div className="mt-6 space-y-6">
-              <div>
-                <h3 className="text-lg font-medium text-gray-900">
-                  Soft Comfort
-                </h3>
-                <p className="mt-2">
-                  French terry fabric is lightweight, soft, and comfortable.
-                </p>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-medium text-gray-900">
-                  Durable Style
-                </h3>
-                <p className="mt-2">
-                  Reinforced shoulder seams and ribbing enhance durability.
-                </p>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-medium text-gray-900">
-                  Product Details
-                </h3>
-                <ul className="mt-2 list-disc pl-5 space-y-2">
-                  <li>Ribbing at the hem and cuffs</li>
-                  <li>Back neck tape</li>
-                  <li>Fabric: 80% cotton 20% polyester</li>
-                  <li>Machine wash</li>
-                  <li>Imported</li>
-                  <li>Color Shown: Black/White</li>
-                  <li>Style: BV2666-010</li>
-                </ul>
-              </div>
+            <div>
+              {data?.description
+                ? data.description
+                : "No description available "}
             </div>
           </div>
         );
@@ -106,29 +75,17 @@ export default function ProductDetails() {
             <h2 className="text-2xl font-bold text-gray-900 mb-4">
               Shipping & Returns
             </h2>
+            {/* <div className="space-y-6">{data?.shippingReturn.shippingType}</div> */}
+            {/* <div className="space-y-6">{data?.shippingReturn.shippingCost}</div> */}
+            {/* <div className="space-y-6">
+              {data?.shippingReturn.isProductQuantity}
+            </div> */}
             <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-medium text-gray-900">
-                  Shipping Policy
-                </h3>
-                <ul className="mt-2 list-disc pl-5 space-y-2">
-                  <li>Free standard shipping on orders over $50</li>
-                  <li>Express shipping available (2-3 business days)</li>
-                  <li>International shipping available to select countries</li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="text-lg font-medium text-gray-900">
-                  Return Policy
-                </h3>
-                <ul className="mt-2 list-disc pl-5 space-y-2">
-                  <li>30-day return window for unworn items</li>
-                  <li>Free returns on all U.S. orders</li>
-                  <li>
-                    Items must be in original packaging with tags attached
-                  </li>
-                </ul>
-              </div>
+              {data?.shippingReturn?.returnPolicy ? (
+                <p>{data.shippingReturn.returnPolicy}</p>
+              ) : (
+                <p>No return policy information available.</p>
+              )}
             </div>
           </div>
         );

@@ -62,39 +62,6 @@ export default function Home() {
 
   // console.log(flashSaleProducts);
 
-  const products = [
-    {
-      title: "Product title",
-      image: "/men-cover.png",
-      price: "#50",
-      originalPrice: "#70",
-    },
-    {
-      title: "Product title",
-      image: "/men-cover.png",
-      price: "#50",
-      originalPrice: "#70",
-    },
-    {
-      title: "Product title",
-      image: "/men-cover.png",
-      price: "#50",
-      originalPrice: "#70",
-    },
-    {
-      title: "Product title",
-      image: "/men-cover.png",
-      price: "#50",
-      originalPrice: "#70",
-    },
-    {
-      title: "Product title",
-      image: "/men-cover.png",
-      price: "#50",
-      originalPrice: "#70",
-    },
-  ];
-
   const services = [
     {
       icon: <FaHeadset size={30} className="text-center text-neutral-dark" />,
