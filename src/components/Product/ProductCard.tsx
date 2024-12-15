@@ -1,9 +1,14 @@
+"use client";
+import { useToast } from "@/context/ToastContext";
+import axiosInstance from "@/lib/axiosInstance";
 import Link from "next/link";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { FaHeart, FaStar } from "react-icons/fa";
 
 interface Product {
+  _id?: string;
   product?: {
+    _id?: string;
     images: string[];
     name: string;
     slug: string;
@@ -28,9 +33,166 @@ interface Product {
 interface ProductCardProps {
   data: Product[];
   isWishListed?: boolean;
+  onWishlistUpdate?: () => void;
 }
 
-export default function ProductCard({ data, isWishListed }: ProductCardProps) {
+// Helper function to calculate discounted price
+function calculateDiscountedPrice(
+  originalPrice: string | number,
+  discountPercentage: number
+): string {
+  const price =
+    typeof originalPrice === "string"
+      ? parseFloat(originalPrice)
+      : originalPrice;
+  const discount = price * (discountPercentage / 100);
+  return (price - discount).toFixed(2);
+}
+
+export default function ProductCard({
+  data,
+  onWishlistUpdate,
+}: ProductCardProps) {
+  const { showToast } = useToast();
+  const [wishlistedItems, setWishlistedItems] = useState<string[]>([]);
+
+  // Add this useEffect to initialize wishlist items
+  useEffect(() => {
+    const fetchWishlist = async () => {
+      try {
+        const response = await axiosInstance.get("/wishlist");
+        if (response.data.status) {
+          // Assuming response.data.data is an array of wishlist items
+
+          const wishlistProductIds = response.data.data.map(
+            (item: { product: { _id: string } }) => item.product._id
+          );
+
+          setWishlistedItems(wishlistProductIds);
+        }
+      } catch (error) {
+        console.error("Failed to fetch wishlist", error);
+      }
+    };
+
+    fetchWishlist();
+  }, []);
+
+  const addToWishList = async (productId: string) => {
+    try {
+      const response = await axiosInstance.post("/wishlist", {
+        product: productId,
+      });
+
+      if (response.data.status) {
+        showToast({
+          type: "success",
+          message: "Product added to wishlist successfully",
+        });
+        // Add the product ID to wishlistedItems
+        setWishlistedItems((prev) => [...prev, productId]);
+      } else {
+        showToast({
+          type: "error",
+          message: response.data.msg || "Failed to add product to wishlist",
+        });
+      }
+    } catch (error) {
+      console.error("Wishlist Error:", error);
+      showToast({
+        type: "error",
+        message: "An unexpected error occurred",
+      });
+      // // Handle different types of errors
+      // if (error.response) {
+      //   showToast({
+      //     type: "error",
+      //     message:
+      //       error.response.data.msg || "Failed to add product to wishlist",
+      //   });
+      // } else if (error.request) {
+      //   showToast({
+      //     type: "error",
+      //     message: "No response received. Check your network connection.",
+      //   });
+      // } else {
+      //   showToast({
+      //     type: "error",
+      //     message: "An unexpected error occurred",
+      //   });
+      // }
+    }
+  };
+
+  const removeFromWishList = async (productId: string) => {
+    try {
+      const response = await axiosInstance.delete(`/wishlist/${productId}`);
+
+      if (response?.data?.status) {
+        showToast({
+          type: "success",
+          message: "Product removed from wishlist successfully",
+        });
+
+        // Remove the product ID from wishlistedItems
+        setWishlistedItems((prev) => prev.filter((id) => id !== productId));
+
+        onWishlistUpdate?.();
+      } else {
+        showToast({
+          type: "error",
+          message:
+            response.data.msg || "Failed to remove product from wishlist",
+        });
+      }
+    } catch (error) {
+      console.error("Remove Wishlist Error:", error);
+      showToast({
+        type: "error",
+        message: "An unexpected error occurred",
+      });
+
+      // // Handle different types of errors
+      // if (error.response) {
+      //   showToast({
+      //     type: "error",
+      //     message:
+      //       error.response.data.msg || "Failed to remove product from wishlist",
+      //   });
+      // } else if (error.request) {
+      //   showToast({
+      //     type: "error",
+      //     message: "No response received. Check your network connection.",
+      //   });
+      // } else {
+      //   showToast({
+      //     type: "error",
+      //     message: "An unexpected error occurred",
+      //   });
+      // }
+    }
+  };
+
+  // Add this useEffect to initialize wishlist items
+  useEffect(() => {
+    const fetchWishlist = async () => {
+      try {
+        const response = await axiosInstance.get("/wishlist");
+        if (response.data.status) {
+          // Assuming response.data.data is an array of wishlist items
+          const wishlistProductIds = response.data.data.map(
+            (item: { product: { _id: string } }) => item.product._id
+          );
+          setWishlistedItems(wishlistProductIds);
+        }
+      } catch (error) {
+        console.error("Failed to fetch wishlist", error);
+      }
+    };
+
+    fetchWishlist();
+  }, []);
+
   return (
     <div className="grid sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
       {data?.map((item, index) => {
@@ -66,11 +228,34 @@ export default function ProductCard({ data, isWishListed }: ProductCardProps) {
                     {product?.offer?.discountPercentage}% OFF
                   </span>
                 )}
-                <FaHeart
-                  size={34}
-                  color={`${isWishListed ? "#ff4800" : "text-gray-300"}`}
-                  className="absolute top-4 right-4 bg-white p-[10px] rounded-full z-10"
-                />
+
+                <button
+                  onClick={(e) => {
+                    e.preventDefault(); // Prevent link navigation
+
+                    // Check if the product is already in wishlist
+                    const isWishlisted = wishlistedItems.includes(
+                      product._id || ""
+                    );
+
+                    if (isWishlisted) {
+                      removeFromWishList(product._id || "");
+                    } else {
+                      addToWishList(product._id || "");
+                    }
+                  }}
+                  className="absolute top-4 right-4 z-10"
+                >
+                  <FaHeart
+                    size={34}
+                    color={
+                      wishlistedItems.includes(product._id || "")
+                        ? "#ff4800"
+                        : "text-gray-300"
+                    }
+                    className="bg-white p-[10px] rounded-full"
+                  />
+                </button>
                 <div className="overflow-hidden">
                   <img
                     src={product.images?.[0]}
@@ -111,14 +296,4 @@ export default function ProductCard({ data, isWishListed }: ProductCardProps) {
       })}
     </div>
   );
-}
-
-// Helper function to calculate discounted price
-function calculateDiscountedPrice(
-  originalPrice: string,
-  discountPercentage: number
-): string {
-  const price = parseFloat(originalPrice);
-  const discount = price * (discountPercentage / 100);
-  return (price - discount).toFixed(2);
 }

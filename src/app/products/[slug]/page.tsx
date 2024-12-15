@@ -94,7 +94,6 @@ export default function ProductDetail() {
           message: "Product added to wishlist successfully",
         });
       } else {
-        // Handle case where status is false (e.g., product already in wishlist)
         showToast({
           type: "error",
           message: response.data.msg || "Failed to add product to wishlist",
@@ -212,7 +211,7 @@ export default function ProductDetail() {
                   </div>
                 ) : (
                   <p className="mt-4 text-xl text-[#00CA4E]">
-                    {product?.sellingPrice}
+                    ₦{product?.sellingPrice}
                   </p>
                 )}
                 <span className="flex gap-2 mt-2">
