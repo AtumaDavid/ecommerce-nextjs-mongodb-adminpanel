@@ -4,6 +4,7 @@
     "Cloudinary",
     "datepicker",
     "FORMIK",
+    "headlessui",
     "signin",
     "Wishlisted"
   ]

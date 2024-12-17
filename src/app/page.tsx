@@ -25,6 +25,7 @@ interface Product {
 }
 export default function Home() {
   const [flashSaleProducts, setFlashSaleProducts] = useState<Product[]>([]);
+  const [latestProducts, setLatestProducts] = useState([]);
 
   const calculateDiscountedPrice = (
     originalPrice: string,
@@ -60,6 +61,19 @@ export default function Home() {
     fetchFlashSaleProducts();
   }, []);
 
+  const fetchLatestProducts = async () => {
+    await axiosInstance.get("/products").then((data) => {
+      if (data?.data?.status) {
+        setLatestProducts(data?.data?.data);
+        // console.log(data?.data?.data);
+      }
+    });
+  };
+
+  useEffect(() => {
+    fetchLatestProducts();
+  }, []);
+
   // console.log(flashSaleProducts);
 
   const services = [
@@ -93,12 +107,15 @@ export default function Home() {
         <CategoryCarousel />
         <PromotionCard />
         <div className="xl:container px-2 xl:px-4 mt-10 mx-auto">
-          <h2 className="text-3xl font-bold mb-4">Trendy Collections</h2>
-          {/* <ProductCard isWishListed={false} data={products} /> */}
+          <h2 className="text-3xl font-bold mb-4">Latest Products</h2>
+          <ProductCard isWishListed={false} data={latestProducts.slice(0, 8)} />
         </div>
         <div className="xl:container px-2 xl:px-4 mt-10 mx-auto">
           <h2 className="text-3xl font-bold mb-4">Flash Sales</h2>
-          <ProductCard isWishListed={false} data={flashSaleProducts} />
+          <ProductCard
+            isWishListed={false}
+            data={flashSaleProducts.slice(0, 8)}
+          />
         </div>
 
         {/* services */}

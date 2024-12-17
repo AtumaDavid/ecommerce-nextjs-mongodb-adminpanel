@@ -186,7 +186,6 @@ const DashboardProduct = () => {
         : [];
 
       // Merge existing images with the new image
-      // Merge existing images with the new image
       const updatedImages = productData.images
         ? [...new Set([...existingImages, productData.images])].slice(0, 4) // Limit to 4 images
         : existingImages;

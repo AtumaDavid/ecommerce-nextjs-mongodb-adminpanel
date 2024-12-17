@@ -9,6 +9,7 @@ import Profile from "./Profile";
 import { RiShoppingCartLine } from "react-icons/ri";
 import { FaBars } from "react-icons/fa";
 import MenuTabs from "./MenuTabs";
+import CartSidebar from "../cart/CartSidebar";
 
 export default function Header() {
   const pathname = usePathname();
@@ -16,6 +17,7 @@ export default function Header() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   const toggleCategoriesDropdown = (): void => {
     setIsCategoriesOpen(!isCategoriesOpen);
@@ -35,155 +37,161 @@ export default function Header() {
   // const handleProfileLeave = () => setIsProfileOpen(false);
 
   return (
-    <div className="bg-white shadow-md sticky top-0 z-50">
-      <div className="xl:container flex px-2 xl:px-4 items-center justify-between mx-auto">
-        {/* Left-hand side */}
-        {/* Mobile */}
-        <div className="lg:hidden block">
-          <FaBars className="text-2xl text-neutral-dark font-bold" />
-        </div>
-        <div className="flex items-center space-x-4 xl:space-x-8">
-          <Link href={"/"} className="flex items-center space-x-3 py-4">
-            <CiShoppingCart className="text-neutral-dark text-3xl" />
-            <div className="font-bold">
-              <span className="text-3xl font-bold text-neutral-dark">
-                SHOPY
-              </span>
-            </div>
-          </Link>
-          {/* Navbar labels */}
-          <div className="hidden lg:flex items-center space-x-4 xl:space-x-8 py-4">
-            <Link
-              href={"/"}
-              className={`font-bold text-xl ${
-                pathname === "/" ? "text-primary" : "text-black"
-              }`}
-            >
-              Home
+    <>
+      <div className="bg-white shadow-md sticky top-0 z-50">
+        <div className="xl:container flex px-2 xl:px-4 items-center justify-between mx-auto">
+          {/* Left-hand side */}
+          {/* Mobile */}
+          <div className="lg:hidden block">
+            <FaBars className="text-2xl text-neutral-dark font-bold" />
+          </div>
+          <div className="flex items-center space-x-4 xl:space-x-8">
+            <Link href={"/"} className="flex items-center space-x-3 py-4">
+              <CiShoppingCart className="text-neutral-dark text-3xl" />
+              <div className="font-bold">
+                <span className="text-3xl font-bold text-neutral-dark">
+                  SHOPY
+                </span>
+              </div>
             </Link>
-            <div className="relative">
-              <button
-                onClick={toggleCategoriesDropdown}
-                className="text-black flex items-center gap-2 font-bold text-xl"
+            {/* Navbar labels */}
+            <div className="hidden lg:flex items-center space-x-4 xl:space-x-8 py-4">
+              <Link
+                href={"/"}
+                className={`font-bold text-xl ${
+                  pathname === "/" ? "text-primary" : "text-black"
+                }`}
               >
-                Categories <IoIosArrowDropdown className="text-xl" />
-              </button>
-              {isCategoriesOpen && (
-                <div className="absolute w-[800px] bg-white rounded shadow-md">
-                  <MenuTabs />
+                Home
+              </Link>
+              <div className="relative">
+                <button
+                  onClick={toggleCategoriesDropdown}
+                  className="text-black flex items-center gap-2 font-bold text-xl"
+                >
+                  Categories <IoIosArrowDropdown className="text-xl" />
+                </button>
+                {isCategoriesOpen && (
+                  <div className="absolute w-[800px] bg-white rounded shadow-md">
+                    <MenuTabs />
+                  </div>
+                )}
+              </div>
+              <Link
+                href={"/offers"}
+                className={`${
+                  pathname === "/offers" ? "text-primary" : "text-black"
+                } font-bold text-xl py-4`}
+              >
+                Offers
+              </Link>
+            </div>
+          </div>
+
+          {/* Right-hand side */}
+          <div className="hidden lg:flex items-center space-x-3 xl:space-x-6">
+            {/* Search */}
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="search"
+                className="pl-10 pr-4 py-2 rounded-full bg-gray-100 focus:outline-none"
+              />
+              <CiSearch className="text-2xl text-neutral-dark font-bold absolute left-3 top-1/2 transform -translate-y-1/2" />
+            </div>
+            {/* Language */}
+            <div className="relative group me-4 py-4">
+              <div
+                className="flex items-center space-x-2 cursor-pointer"
+                onClick={() => setIsLanguageOpen(!isLanguageOpen)}
+              >
+                <Image
+                  src={"/english.png"}
+                  alt="flag"
+                  className="h-5"
+                  width={20}
+                  height={5}
+                />
+                <span>English</span>
+                <IoIosArrowDropdown className="text-xl ms-3" />
+              </div>
+              {isLanguageOpen && (
+                <div className="absolute top-14 left-[1px] w-48 p-3 bg-white border rounded shadow-lg">
+                  <button
+                    className="flex items-center space-x-8 gap-3"
+                    onClick={() => {
+                      // Handle language selection logic
+                      setIsLanguageOpen(false);
+                    }}
+                  >
+                    <Image
+                      src={"/english.png"}
+                      alt="flag"
+                      width={20}
+                      height={5}
+                    />
+                    English
+                  </button>
                 </div>
               )}
             </div>
-            <Link
-              href={"/offers"}
-              className={`${
-                pathname === "/offers" ? "text-primary" : "text-black"
-              } font-bold text-xl py-4`}
-            >
-              Offers
+            {/* Wishlist */}
+            <Link href={"/wishlist"}>
+              <CiHeart className="text-2xl text-neutral-dark font-bold" />
             </Link>
-          </div>
-        </div>
-
-        {/* Right-hand side */}
-        <div className="hidden lg:flex items-center space-x-3 xl:space-x-6">
-          {/* Search */}
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="search"
-              className="pl-10 pr-4 py-2 rounded-full bg-gray-100 focus:outline-none"
-            />
-            <CiSearch className="text-2xl text-neutral-dark font-bold absolute left-3 top-1/2 transform -translate-y-1/2" />
-          </div>
-          {/* Language */}
-          <div className="relative group me-4 py-4">
-            <div
-              className="flex items-center space-x-2 cursor-pointer"
-              onClick={() => setIsLanguageOpen(!isLanguageOpen)}
-            >
-              <Image
-                src={"/english.png"}
-                alt="flag"
-                className="h-5"
-                width={20}
-                height={5}
+            {/* User profile */}
+            <div className="relative me-4 py-4">
+              <div
+                className="flex items-center space-x-2 cursor-pointer"
+                onClick={() => setIsProfileOpen(!isProfileOpen)}
+              >
+                <CiUser className="text-2xl text-neutral-dark font-bold" />
+              </div>
+              {isProfileOpen && (
+                <div className="absolute top-14 right-[-10px] w-64 p-3 bg-white rounded-md shadow-md">
+                  {!isLoggedIn ? (
+                    <div className="flex flex-col items-center py-3">
+                      <Link
+                        href={"/registration"}
+                        className="py-2 px-3 block bg-neutral-dark rounded-full text-neutral-light text-xl w-full text-center"
+                      >
+                        Register your account
+                      </Link>
+                      <p className="py-1 text-center">OR</p>
+                      <Link
+                        href={"/signin"}
+                        className="py-2 px-3 block bg-neutral-light rounded-full text-neutral-dark text-xl w-full text-center"
+                      >
+                        Login to your account
+                      </Link>
+                    </div>
+                  ) : (
+                    <Profile
+                      user={{
+                        name: "David",
+                        phone: "123456789",
+                        avatarUrl: "/profile.png",
+                      }}
+                    />
+                  )}
+                </div>
+              )}
+            </div>
+            {/* Cart */}
+            <div className="p-2 rounded-full cursor-pointer border border-neutral-dark">
+              <RiShoppingCartLine
+                className="text-2xl text-neutral-dark font-bold"
+                onClick={() => setIsCartOpen(true)}
               />
-              <span>English</span>
-              <IoIosArrowDropdown className="text-xl ms-3" />
             </div>
-            {isLanguageOpen && (
-              <div className="absolute top-14 left-[1px] w-48 p-3 bg-white border rounded shadow-lg">
-                <button
-                  className="flex items-center space-x-8 gap-3"
-                  onClick={() => {
-                    // Handle language selection logic
-                    setIsLanguageOpen(false);
-                  }}
-                >
-                  <Image
-                    src={"/english.png"}
-                    alt="flag"
-                    width={20}
-                    height={5}
-                  />
-                  English
-                </button>
-              </div>
-            )}
           </div>
-          {/* Wishlist */}
-          <Link href={"/wishlist"}>
-            <CiHeart className="text-2xl text-neutral-dark font-bold" />
-          </Link>
-          {/* User profile */}
-          <div className="relative me-4 py-4">
-            <div
-              className="flex items-center space-x-2 cursor-pointer"
-              onClick={() => setIsProfileOpen(!isProfileOpen)}
-            >
-              <CiUser className="text-2xl text-neutral-dark font-bold" />
-            </div>
-            {isProfileOpen && (
-              <div className="absolute top-14 right-[-10px] w-64 p-3 bg-white rounded-md shadow-md">
-                {!isLoggedIn ? (
-                  <div className="flex flex-col items-center py-3">
-                    <Link
-                      href={"/registration"}
-                      className="py-2 px-3 block bg-neutral-dark rounded-full text-neutral-light text-xl w-full text-center"
-                    >
-                      Register your account
-                    </Link>
-                    <p className="py-1 text-center">OR</p>
-                    <Link
-                      href={"/signin"}
-                      className="py-2 px-3 block bg-neutral-light rounded-full text-neutral-dark text-xl w-full text-center"
-                    >
-                      Login to your account
-                    </Link>
-                  </div>
-                ) : (
-                  <Profile
-                    user={{
-                      name: "David",
-                      phone: "123456789",
-                      avatarUrl: "/profile.png",
-                    }}
-                  />
-                )}
-              </div>
-            )}
+          {/* Mobile right-hand side */}
+          <div className="lg:hidden">
+            <CiSearch className="text-2xl text-neutral-dark font-bold" />
           </div>
-          {/* Cart */}
-          <div className="p-2 rounded-full cursor-pointer border border-neutral-dark">
-            <RiShoppingCartLine className="text-2xl text-neutral-dark font-bold" />
-          </div>
-        </div>
-        {/* Mobile right-hand side */}
-        <div className="lg:hidden">
-          <CiSearch className="text-2xl text-neutral-dark font-bold" />
         </div>
       </div>
-    </div>
+      <CartSidebar isOpen={isCartOpen} setIsOpen={setIsCartOpen} />
+    </>
   );
 }

@@ -153,12 +153,6 @@ const ProductForm: React.FC<AddProductFormProps> = ({
   const [formData, setFormData] = useState<ProductFormData>({
     _id: initialData?._id || undefined, // Add this line
     name: initialData?.name || "",
-    // images: initialData?.images || "",
-    // images:
-    //   initialData?.images ||
-    //   (initialData?.name
-    //     ? generateInitialsAvatar(initialData.name)
-    //     : generateInitialsAvatar("Product")),
     images: (() => {
       // Handle different possible image input types
       const image = initialData?.images;
