@@ -8,6 +8,8 @@ import ProductDetails from "@/components/Product/ProductDetails";
 import { useParams } from "next/navigation";
 import axiosInstance from "@/lib/axiosInstance";
 import { useToast } from "@/context/ToastContext";
+import Variations from "@/components/Dashboard/Products/ViewProductsDetails/information/Variation";
+import useCartStore from "@/store/cartStore";
 
 export interface ProductDetail {
   _id?: string;
@@ -40,13 +42,32 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
+  const [selectedVariation, setSelectedVariation] = useState<any>(null);
+  const { addToCart, isLoading } = useCartStore();
+
+  // Utility function to normalize strings (case-insensitive)
+  const normalizeString = (str: string | undefined) =>
+    str ? str.trim().toLowerCase() : "";
 
   const fetchedProduct = async () => {
-    await axiosInstance.get(`/products/${params?.slug}/byslug`).then((data) => {
-      if (data?.data?.status) {
-        setProduct(data?.data?.data);
+    // await axiosInstance.get(`/products/${params?.slug}/byslug`).then((data) => {
+    //   if (data?.data?.status) {
+    //     setProduct(data?.data?.data);
+    //   }
+    // });
+    try {
+      const response = await axiosInstance.get(
+        `/products/${params?.slug}/byslug`
+      );
+      if (response?.data?.status) {
+        setProduct(response?.data?.data);
       }
-    });
+    } catch (error) {
+      showToast({
+        type: "error",
+        message: "Failed to fetch product details",
+      });
+    }
   };
 
   useEffect(() => {
@@ -63,12 +84,68 @@ export default function ProductDetail() {
   // console.log(product);
 
   const handleQuantityChange = (action: "increase" | "decrease") => {
+    // if (action === "increase") {
+    //   setQuantity((prev) => Math.min(prev + 1, 10));
+    // } else {
+    //   setQuantity((prev) => Math.max(prev - 1, 1));
+    // }
+
+    // If a specific variation is selected, use its quantity
+    const maxQuantity = selectedVariation
+      ? selectedVariation.quantityAvailable
+      : 10; // Default max if no variation selected
+
     if (action === "increase") {
-      setQuantity((prev) => Math.min(prev + 1, 10));
+      setQuantity((prev) => Math.min(prev + 1, maxQuantity));
     } else {
       setQuantity((prev) => Math.max(prev - 1, 1));
     }
   };
+
+  // When color or size changes, find the corresponding variation
+  useEffect(() => {
+    if (selectedColor && selectedSize) {
+      const variation = product?.variations?.find(
+        (v) =>
+          normalizeString(v.color) === normalizeString(selectedColor) &&
+          v.size === selectedSize
+      );
+
+      setSelectedVariation(variation);
+
+      // Reset quantity if new variation has less available stock
+      if (selectedVariation && quantity > selectedVariation.quantityAvailable) {
+        setQuantity(selectedVariation.quantityAvailable);
+      }
+    } else {
+      setSelectedVariation(null);
+    }
+  }, [selectedColor, selectedSize, product]);
+
+  // // Modify the render to show variation-specific price
+  // const getDisplayPrice = () => {
+  //   // If a specific variation is selected, use its price
+  //   if (selectedVariation && selectedVariation.price) {
+  //     return `₦${selectedVariation.price}`;
+  //   }
+
+  //   // Fallback to product's selling price
+  //   return product?.offer?.discountPercentage
+  //     ? `₦${(
+  //         parseFloat(product.sellingPrice.replace("₦", "")) *
+  //         (1 - product.offer.discountPercentage / 100)
+  //       ).toFixed(2)}`
+  //     : `₦${product?.sellingPrice}`;
+  // };
+
+  // Extract unique colors (case-insensitive)
+  const uniqueColors = Array.from(
+    new Set(
+      product?.variations
+        ?.map((item) => normalizeString(item?.color))
+        .filter(Boolean)
+    )
+  );
 
   // ADD TO WISHLIST
   const addToWishList = async () => {
@@ -126,6 +203,96 @@ export default function ProductDetail() {
       }
     } finally {
       //  setIsAdding(false); // Always reset loading state
+    }
+  };
+
+  // // ADD TO CART
+  // const addToCart = async () => {
+  //   if (!product?._id) {
+  //     showToast({
+  //       type: "error",
+  //       message: "No product selected",
+  //     });
+  //     return;
+  //   }
+  //   // Check if variations exist and require selection
+  //   if (
+  //     product?.variations &&
+  //     product.variations.length > 0 &&
+  //     (!selectedSize || !selectedColor)
+  //   ) {
+  //     showToast({
+  //       type: "error",
+  //       message: "Please select both size and color",
+  //     });
+  //     return;
+  //   }
+
+  //   try {
+  //     // Find the variation ID if color and size are selected
+  //     const variationId = selectedVariation?._id;
+
+  //     const response = await axiosInstance.post("/cart", {
+  //       productId: product._id,
+  //       quantity: quantity,
+  //       variationId: variationId, // Only send if a variation is selected
+  //     });
+
+  //     // Check the response status explicitly
+  //     if (response?.data?.status) {
+  //       showToast({
+  //         type: "success",
+  //         message: "Product added to cart successfully",
+  //       });
+  //     } else {
+  //       showToast({
+  //         type: "error",
+  //         message: response.data.msg || "Failed to add product to cart",
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.error("Cart Addition Error:", error);
+  //     showToast({
+  //       type: "error",
+  //       message: "An unexpected error occurred",
+  //     });
+  //   }
+  // };
+
+  const handleAddToCart = async () => {
+    if (!product?._id) {
+      showToast({
+        type: "error",
+        message: "No product selected",
+      });
+      return;
+    }
+
+    // Validation for variations
+    if (
+      product?.variations &&
+      product.variations.length > 0 &&
+      (!selectedSize || !selectedColor)
+    ) {
+      showToast({
+        type: "error",
+        message: "Please select both size and color",
+      });
+      return;
+    }
+
+    try {
+      await addToCart(product._id, quantity, selectedVariation?._id);
+
+      showToast({
+        type: "success",
+        message: "Product added to cart successfully",
+      });
+    } catch (error) {
+      showToast({
+        type: "error",
+        message: "Failed to add product to cart",
+      });
     }
   };
 
@@ -194,8 +361,14 @@ export default function ProductDetail() {
                 {product?.offer?.discountPercentage ? (
                   <div className="flex items-center gap-3 mt-4">
                     <p className="text-xl text-[#00CA4E]">
-                      {/* Calculate the discounted price */}
-                      {product.sellingPrice && product.offer?.discountPercentage
+                      {/* Calculate the discounted price for variations or base product */}
+                      {selectedVariation && selectedVariation.price
+                        ? `₦${(
+                            selectedVariation.price *
+                            (1 - (product.offer?.discountPercentage || 0) / 100)
+                          ).toFixed(2)}`
+                        : product.sellingPrice &&
+                          product.offer?.discountPercentage
                         ? `₦${(
                             parseFloat(product.sellingPrice.replace("₦", "")) *
                             (1 - product.offer.discountPercentage / 100)
@@ -203,7 +376,8 @@ export default function ProductDetail() {
                         : product.sellingPrice}
                     </p>
                     <p className="text-base text-gray-500 line-through">
-                      ₦{product.sellingPrice}
+                      {/* Show original price from variation or base product */}
+                      ₦{selectedVariation?.price || product.sellingPrice}
                     </p>
                     <p className="text-base text-red-500 font-bold">
                       {product.offer.discountPercentage}% OFF
@@ -211,7 +385,8 @@ export default function ProductDetail() {
                   </div>
                 ) : (
                   <p className="mt-4 text-xl text-[#00CA4E]">
-                    ₦{product?.sellingPrice}
+                    {/* Show variation price if selected, otherwise base product price */}
+                    ₦{selectedVariation?.price || product?.sellingPrice}
                   </p>
                 )}
                 <span className="flex gap-2 mt-2">
@@ -225,42 +400,56 @@ export default function ProductDetail() {
             </div>
 
             {/* Color Selection */}
-            {product?.variations && product.variations.length > 0 && (
+            {uniqueColors.length > 0 && (
               <div className="space-y-4">
                 <h2 className="text-lg font-medium text-gray-900">
                   Color: {selectedColor}
                 </h2>
                 <div className="flex flex-wrap gap-3">
-                  {product?.variations?.map((item) => {
-                    return (
-                      <button
-                        key={item?._id}
-                        onClick={() => setSelectedColor(item?.color || "")}
-                        className={`px-6 py-2 rounded-full text-sm ${
-                          selectedColor === item?.color
-                            ? "bg-primary text-white"
-                            : "bg-gray-100 hover:bg-gray-200 text-gray-900"
-                        } transition-all duration-200`}
-                      >
-                        {item?.color}
-                      </button>
-                    );
-                  })}
+                  {uniqueColors.map((color) => (
+                    <button
+                      key={color}
+                      onClick={() => {
+                        const originalColor = product?.variations?.find(
+                          (item) => normalizeString(item?.color) === color
+                        )?.color;
+
+                        setSelectedColor(originalColor || color);
+                        setSelectedSize(""); // Reset size when color changes
+                      }}
+                      className={`px-6 py-2 rounded-full text-sm ${
+                        normalizeString(selectedColor) === color
+                          ? "bg-primary text-white"
+                          : "bg-gray-100 hover:bg-gray-200 text-gray-900"
+                      } transition-all duration-200`}
+                    >
+                      {
+                        product?.variations?.find(
+                          (item) => normalizeString(item?.color) === color
+                        )?.color
+                      }
+                    </button>
+                  ))}
                 </div>
               </div>
             )}
 
-            {/* Size Selection */}
-            {product?.variations && product.variations.length > 0 && (
+            {/* Size Selection (only for selected color) */}
+            {selectedColor && (
               <div className="space-y-4">
                 <h2 className="text-lg font-medium text-gray-900">
                   Size: {selectedSize}
                 </h2>
                 <div className="flex flex-wrap gap-3">
-                  {product?.variations?.map((item) => {
-                    return (
+                  {product?.variations
+                    ?.filter(
+                      (item) =>
+                        normalizeString(item.color) ===
+                          normalizeString(selectedColor) && item.size
+                    )
+                    .map((item) => (
                       <button
-                        key={item?._id}
+                        key={item?.size}
                         onClick={() => setSelectedSize(item?.size || "")}
                         className={`px-6 py-2 rounded-full text-sm ${
                           selectedSize === item?.size
@@ -270,8 +459,7 @@ export default function ProductDetail() {
                       >
                         {item?.size}
                       </button>
-                    );
-                  })}
+                    ))}
                 </div>
               </div>
             )}
@@ -296,7 +484,11 @@ export default function ProductDetail() {
                   </button>
                 </div>
                 <span className="text-sm text-gray-500">
-                  Available: (10) Pieces
+                  {/* Available: (10) Pieces */}
+                  Available:{" "}
+                  {selectedVariation
+                    ? `(${selectedVariation.quantityAvailable}) Pieces`
+                    : "(10) Pieces"}
                 </span>
               </div>
             </div>
@@ -305,6 +497,8 @@ export default function ProductDetail() {
             <div className="space-y-4 pt-4">
               <div className="grid grid-cols-1 gap-4">
                 <button
+                  // onClick={addToCart}
+                  onClick={handleAddToCart}
                   className={`flex items-center justify-center gap-2 px-8 py-4 rounded-full text-base font-medium ${
                     // If variations exist, require selection
                     product?.variations &&
