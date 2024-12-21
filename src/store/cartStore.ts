@@ -2,49 +2,35 @@ import axiosInstance from "@/lib/axiosInstance";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-// Detailed Product Details Interface
-interface ProductDetails {
-  _id: string;
-  name: string;
-  images: string[];
-  sellingPrice: string;
-  variations?: Array<{
-    _id: string;
-    color?: string;
-    size?: string;
-    price?: number;
-    quantityAvailable?: number;
-  }>;
-}
-
 // Cart Item Interface
-interface CartItem {
-  productId: ProductDetails;
+export interface CartItem {
+  productId: {
+    _id: string;
+    name: string;
+    images: string[];
+    sellingPrice: string;
+    originalPrice?: string;
+    offer?: {
+      discountPercentage?: number;
+      startDate?: string;
+      endDate?: string;
+    };
+    variationDetails?: {
+      color?: string;
+      size?: string;
+      price?: number;
+      quantityAvailable?: number;
+    };
+  };
   quantity: number;
   variationId?: string;
-}
-
-// API Response Interfaces
-interface CartResponse {
-  status: boolean;
-  data: {
-    items: CartItem[];
-    total: number;
+  variationDetails?: {
+    color?: string;
+    size?: string;
+    // price?: number;
   };
-  msg?: string;
+  finalPrice: number; // Calculated price considering variations and offers
 }
-
-// // Define types for cart item and store state
-// interface CartItem {
-//   productId: string;
-//   quantity: number;
-//   variationId?: string;
-//   productDetails?: {
-//     name: string;
-//     images: string[];
-//     sellingPrice: string;
-//   };
-// }
 
 interface CartState {
   cart: CartItem[];
@@ -57,14 +43,17 @@ interface CartState {
   addToCart: (
     productId: string,
     quantity: number,
-    variationId?: string
+    variationId?: string | null
   ) => Promise<void>;
   updateCartItemQuantity: (
     productId: string,
     quantity: number,
-    variationId?: string
+    variationId?: string | null
   ) => Promise<void>;
-  removeFromCart: (productId: string, variationId?: string) => Promise<void>;
+  removeFromCart: (
+    productId: string,
+    variationId?: string | null
+  ) => Promise<void>;
   clearCart: () => Promise<void>;
 }
 
@@ -87,6 +76,7 @@ const useCartStore = create<CartState>()(
               isLoading: false,
             });
           }
+          console.log(response.data);
         } catch (error: any) {
           set({
             error: error.response?.data?.msg || "Failed to fetch cart",
@@ -95,6 +85,7 @@ const useCartStore = create<CartState>()(
         }
       },
 
+      // ADD TO CART
       addToCart: async (productId, quantity, variationId) => {
         set({ isLoading: true, error: null });
         try {
@@ -104,18 +95,22 @@ const useCartStore = create<CartState>()(
             variationId,
           });
 
+          // console.log({ ...response });
+
           if (response.data.status) {
             // Refetch the entire cart to ensure consistency
             await get().fetchCart();
           }
-        } catch (error: any) {
+        } catch (error) {
           set({
-            error: error.response?.data?.msg || "Failed to add to cart",
+            error: "Failed to add to cart",
             isLoading: false,
           });
+          throw error;
         }
       },
 
+      // UPDATE CART
       updateCartItemQuantity: async (productId, quantity, variationId) => {
         set({ isLoading: true, error: null });
         try {
@@ -136,10 +131,19 @@ const useCartStore = create<CartState>()(
         }
       },
 
-      removeFromCart: async (productId, variationId) => {
+      // REMOVE FROM CART
+      removeFromCart: async (
+        productId: string,
+        variationId?: string | null
+      ) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await axiosInstance.delete(`/cart/${productId}`);
+          const response = await axiosInstance.delete(`/cart/${productId}`, {
+            params: {
+              // Only include variationId if it exists
+              ...(variationId ? { variationId } : {}),
+            },
+          });
 
           if (response.data.status) {
             await get().fetchCart();
@@ -149,6 +153,7 @@ const useCartStore = create<CartState>()(
             error: error.response?.data?.msg || "Failed to remove from cart",
             isLoading: false,
           });
+          throw error;
         }
       },
 

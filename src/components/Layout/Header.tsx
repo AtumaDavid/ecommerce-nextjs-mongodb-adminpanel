@@ -10,9 +10,11 @@ import { RiShoppingCartLine } from "react-icons/ri";
 import { FaBars } from "react-icons/fa";
 import MenuTabs from "./MenuTabs";
 import CartSidebar from "../cart/CartSidebar";
+import useCartStore from "@/store/cartStore";
 
 export default function Header() {
   const pathname = usePathname();
+  const { cart } = useCartStore();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
@@ -178,11 +180,16 @@ export default function Header() {
               )}
             </div>
             {/* Cart */}
-            <div className="p-2 rounded-full cursor-pointer border border-neutral-dark">
+            <div className="relative p-2 rounded-full cursor-pointer border border-neutral-dark">
               <RiShoppingCartLine
                 className="text-2xl text-neutral-dark font-bold"
                 onClick={() => setIsCartOpen(true)}
               />
+              {cart.length > 0 && (
+                <span className="absolute top-0 right-0 -mt-2 -mr-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {cart.length}
+                </span>
+              )}
             </div>
           </div>
           {/* Mobile right-hand side */}

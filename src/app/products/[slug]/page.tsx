@@ -8,7 +8,7 @@ import ProductDetails from "@/components/Product/ProductDetails";
 import { useParams } from "next/navigation";
 import axiosInstance from "@/lib/axiosInstance";
 import { useToast } from "@/context/ToastContext";
-import Variations from "@/components/Dashboard/Products/ViewProductsDetails/information/Variation";
+// import Variations from "@/components/Dashboard/Products/ViewProductsDetails/information/Variation";
 import useCartStore from "@/store/cartStore";
 
 export interface ProductDetail {
@@ -22,16 +22,19 @@ export interface ProductDetail {
   description?: string;
   offer?: {
     discountPercentage?: number;
+    startDate?: Date;
+    endDate?: Date;
   };
   shippingReturn?: {
     returnPolicy?: string;
-    // Add other shipping and return related properties as needed
+    shippingType?: string;
   };
   variations?: Array<{
     _id?: string;
     color?: string;
     size?: string;
     price?: number;
+    quantityAvailable?: number;
   }>;
 }
 export default function ProductDetail() {
@@ -122,22 +125,6 @@ export default function ProductDetail() {
     }
   }, [selectedColor, selectedSize, product]);
 
-  // // Modify the render to show variation-specific price
-  // const getDisplayPrice = () => {
-  //   // If a specific variation is selected, use its price
-  //   if (selectedVariation && selectedVariation.price) {
-  //     return `₦${selectedVariation.price}`;
-  //   }
-
-  //   // Fallback to product's selling price
-  //   return product?.offer?.discountPercentage
-  //     ? `₦${(
-  //         parseFloat(product.sellingPrice.replace("₦", "")) *
-  //         (1 - product.offer.discountPercentage / 100)
-  //       ).toFixed(2)}`
-  //     : `₦${product?.sellingPrice}`;
-  // };
-
   // Extract unique colors (case-insensitive)
   const uniqueColors = Array.from(
     new Set(
@@ -206,59 +193,26 @@ export default function ProductDetail() {
     }
   };
 
-  // // ADD TO CART
-  // const addToCart = async () => {
-  //   if (!product?._id) {
-  //     showToast({
-  //       type: "error",
-  //       message: "No product selected",
-  //     });
-  //     return;
-  //   }
-  //   // Check if variations exist and require selection
-  //   if (
-  //     product?.variations &&
-  //     product.variations.length > 0 &&
-  //     (!selectedSize || !selectedColor)
-  //   ) {
-  //     showToast({
-  //       type: "error",
-  //       message: "Please select both size and color",
-  //     });
-  //     return;
-  //   }
+  // Price display logic
+  const getDisplayPrice = () => {
+    // Check if product exists
+    if (!product) return 0;
 
-  //   try {
-  //     // Find the variation ID if color and size are selected
-  //     const variationId = selectedVariation?._id;
+    // Use product's selling price
+    const basePrice = parseFloat(product.sellingPrice?.replace("₦", "") || "0");
 
-  //     const response = await axiosInstance.post("/cart", {
-  //       productId: product._id,
-  //       quantity: quantity,
-  //       variationId: variationId, // Only send if a variation is selected
-  //     });
+    // Apply offer if exists
+    if (
+      product.offer?.discountPercentage &&
+      product.offer.discountPercentage > 0
+    ) {
+      return basePrice * (1 - product.offer.discountPercentage / 100);
+    }
 
-  //     // Check the response status explicitly
-  //     if (response?.data?.status) {
-  //       showToast({
-  //         type: "success",
-  //         message: "Product added to cart successfully",
-  //       });
-  //     } else {
-  //       showToast({
-  //         type: "error",
-  //         message: response.data.msg || "Failed to add product to cart",
-  //       });
-  //     }
-  //   } catch (error) {
-  //     console.error("Cart Addition Error:", error);
-  //     showToast({
-  //       type: "error",
-  //       message: "An unexpected error occurred",
-  //     });
-  //   }
-  // };
+    return basePrice;
+  };
 
+  // Add to Cart Handler
   const handleAddToCart = async () => {
     if (!product?._id) {
       showToast({
@@ -361,41 +315,25 @@ export default function ProductDetail() {
                 {product?.offer?.discountPercentage ? (
                   <div className="flex items-center gap-3 mt-4">
                     <p className="text-xl text-[#00CA4E]">
-                      {/* Calculate the discounted price for variations or base product */}
-                      {selectedVariation && selectedVariation.price
-                        ? `₦${(
-                            selectedVariation.price *
-                            (1 - (product.offer?.discountPercentage || 0) / 100)
-                          ).toFixed(2)}`
-                        : product.sellingPrice &&
-                          product.offer?.discountPercentage
-                        ? `₦${(
-                            parseFloat(product.sellingPrice.replace("₦", "")) *
-                            (1 - product.offer.discountPercentage / 100)
-                          ).toFixed(2)}`
-                        : product.sellingPrice}
+                      ₦{product ? getDisplayPrice().toFixed(2) : "0.00"}
                     </p>
-                    <p className="text-base text-gray-500 line-through">
-                      {/* Show original price from variation or base product */}
-                      ₦{selectedVariation?.price || product.sellingPrice}
-                    </p>
-                    <p className="text-base text-red-500 font-bold">
-                      {product.offer.discountPercentage}% OFF
-                    </p>
+                    <span className="line-through text-gray-400">
+                      ₦
+                      {product
+                        ? parseFloat(
+                            product.sellingPrice?.replace("₦", "") || "0"
+                          ).toFixed(2)
+                        : "0.00"}
+                    </span>
+                    <span className="text-red-500">
+                      {product?.offer?.discountPercentage}% OFF
+                    </span>
                   </div>
                 ) : (
                   <p className="mt-4 text-xl text-[#00CA4E]">
-                    {/* Show variation price if selected, otherwise base product price */}
-                    ₦{selectedVariation?.price || product?.sellingPrice}
+                    ₦{product ? getDisplayPrice().toFixed(2) : "0.00"}
                   </p>
                 )}
-                <span className="flex gap-2 mt-2">
-                  <FaStar className="text-yellow-500" />
-                  <FaStar className="text-yellow-500" />
-                  <FaStar className="text-yellow-500" />
-                  <FaStar className="text-yellow-500" />
-                  <FaStar className="text-yellow-500" />
-                </span>
               </div>
             </div>
 
