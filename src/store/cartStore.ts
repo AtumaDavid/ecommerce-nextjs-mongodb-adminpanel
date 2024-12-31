@@ -1,6 +1,8 @@
 import axiosInstance from "@/lib/axiosInstance";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import Cookies from "js-cookie";
+import { error } from "console";
 
 // Cart Item Interface
 export interface CartItem {
@@ -23,7 +25,7 @@ export interface CartItem {
     };
   };
   quantity: number;
-  variationId?: string;
+  variationId?: string | null;
   variationDetails?: {
     color?: string;
     size?: string;
@@ -57,6 +59,12 @@ interface CartState {
   clearCart: () => Promise<void>;
 }
 
+interface LocalCartItem {
+  productId: string;
+  quantity: number;
+  variationId?: string | null;
+}
+
 const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
@@ -68,18 +76,34 @@ const useCartStore = create<CartState>()(
       fetchCart: async () => {
         set({ isLoading: true, error: null });
         try {
-          const response = await axiosInstance.get("/cart");
-          if (response.data.status) {
-            set({
-              cart: response.data.data.items,
-              total: response.data.total,
-              isLoading: false,
-            });
+          // const response = await axiosInstance.get("/cart");
+          // if (response.data.status) {
+          //   set({
+          //     cart: response.data.data.items,
+          //     total: response.data.total,
+          //     isLoading: false,
+          //   });
+          // }
+          // console.log(response.data);
+          const isLoggedIn = !!Cookies.get("token"); // Check if user is logged in using cookies
+
+          if (isLoggedIn) {
+            const response = await axiosInstance.get("/cart");
+            if (response.data.status) {
+              set({
+                cart: response.data.data.items,
+                total: response.data.total,
+                isLoading: false,
+              });
+            }
+          } else {
+            // Fetch cart from cookies if not logged in
+            const localCart = JSON.parse(Cookies.get("cart") || "[]");
+            set({ cart: localCart, isLoading: false });
           }
-          console.log(response.data);
-        } catch (error: any) {
+        } catch (error) {
           set({
-            error: error.response?.data?.msg || "Failed to fetch cart",
+            error: "Failed to fetch cart",
             isLoading: false,
           });
         }
@@ -89,19 +113,76 @@ const useCartStore = create<CartState>()(
       addToCart: async (productId, quantity, variationId) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await axiosInstance.post("/cart", {
-            productId,
-            quantity,
-            variationId,
-          });
+          const isLoggedIn = !!Cookies.get("token");
+          if (isLoggedIn) {
+            const response = await axiosInstance.post("/cart", {
+              productId,
+              quantity,
+              variationId,
+            });
+            if (response.data.status) {
+              await get().fetchCart();
+            }
+          } else {
+            // Fetch product details from the server
+            const productResponse = await axiosInstance.get(
+              `/products/${productId}`
+            );
+            const productDetails = productResponse.data.data;
 
-          // console.log({ ...response });
+            // Check if the item already exists in the cart
+            const existingItemIndex = get().cart.findIndex(
+              (item) =>
+                item.productId._id === productId &&
+                item.variationId === variationId
+            );
 
-          if (response.data.status) {
-            // Refetch the entire cart to ensure consistency
-            await get().fetchCart();
+            if (existingItemIndex !== -1) {
+              // If item exists, update its quantity directly
+              const updatedCart = [...get().cart];
+              updatedCart[existingItemIndex] = {
+                ...updatedCart[existingItemIndex],
+                quantity: quantity, // Set to the new quantity, not add
+              };
+
+              set({ cart: updatedCart });
+              Cookies.set("cart", JSON.stringify(updatedCart));
+            } else {
+              // Add new item to cart
+              const newItem: CartItem = {
+                productId: {
+                  _id: productDetails._id,
+                  name: productDetails.name,
+                  images: productDetails.images,
+                  sellingPrice: productDetails.sellingPrice,
+                  offer: productDetails.offer,
+                  variationDetails: variationId
+                    ? productDetails.variations?.find(
+                        (variation: {
+                          _id?: string;
+                          color?: string;
+                          size?: string;
+                          // price?: number;
+                          quantityAvailable?: number;
+                        }) => variation._id === variationId
+                      )
+                    : undefined,
+                },
+                quantity,
+                variationId,
+                finalPrice: parseFloat(
+                  productDetails.sellingPrice.replace("₦", "")
+                ),
+              };
+
+              // Update the cart in state and cookies
+              const updatedCart = [...get().cart, newItem];
+              set({ cart: updatedCart });
+              Cookies.set("cart", JSON.stringify(updatedCart));
+            }
           }
         } catch (error) {
+          console.error("Error in addToCart:", error);
           set({
             error: "Failed to add to cart",
             isLoading: false,
@@ -114,18 +195,40 @@ const useCartStore = create<CartState>()(
       updateCartItemQuantity: async (productId, quantity, variationId) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await axiosInstance.put(`/cart`, {
-            productId,
-            quantity,
-            variationId,
-          });
+          // const response = await axiosInstance.put(`/cart`, {
+          //   productId,
+          //   quantity,
+          //   variationId,
+          // });
 
-          if (response.data.status) {
-            await get().fetchCart();
+          // if (response.data.status) {
+          //   await get().fetchCart();
+          // }
+          const isLoggedIn = !!Cookies.get("token");
+
+          if (isLoggedIn) {
+            const response = await axiosInstance.put("/cart", {
+              productId,
+              quantity,
+              variationId,
+            });
+            if (response.data.status) {
+              await get().fetchCart();
+            }
+          } else {
+            // update local cart with cookies if not logged in
+            const updatedCart = get().cart.map((item) =>
+              item.productId._id === productId &&
+              item.variationId === variationId
+                ? { ...item, quantity }
+                : item
+            );
+            set({ cart: updatedCart });
+            Cookies.set("cart", JSON.stringify(updatedCart)); //update cookies
           }
-        } catch (error: any) {
+        } catch (error) {
           set({
-            error: error.response?.data?.msg || "Failed to update cart",
+            error: "Failed to update cart",
             isLoading: false,
           });
         }
@@ -138,38 +241,92 @@ const useCartStore = create<CartState>()(
       ) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await axiosInstance.delete(`/cart/${productId}`, {
-            params: {
-              // Only include variationId if it exists
-              ...(variationId ? { variationId } : {}),
-            },
-          });
+          // const response = await axiosInstance.delete(`/cart/${productId}`, {
+          //   params: {
+          //     // Only include variationId if it exists
+          //     ...(variationId ? { variationId } : {}),
+          //   },
+          // });
 
-          if (response.data.status) {
-            await get().fetchCart();
+          // if (response.data.status) {
+          //   await get().fetchCart();
+          // }
+          const isLoggedIn = !!Cookies.get("token");
+          if (isLoggedIn) {
+            const response = await axiosInstance.delete(`/cart/${productId}`, {
+              params: {
+                // Only include variationId if it exists
+                ...(variationId ? { variationId } : {}),
+              },
+            });
+            if (response.data.status) {
+              await get().fetchCart();
+            }
+          } else {
+            // Remove from local cart in cookies if not logged in
+            const updatedCart = get().cart.filter(
+              (item) =>
+                !(
+                  item.productId._id === productId &&
+                  item.variationId === variationId
+                )
+            );
+            set({ cart: updatedCart });
+            Cookies.set("cart", JSON.stringify(updatedCart));
           }
-        } catch (error: any) {
+        } catch (error) {
           set({
-            error: error.response?.data?.msg || "Failed to remove from cart",
+            error: "Failed to remove from cart",
             isLoading: false,
           });
           throw error;
         }
       },
 
+      // CLEAR CART
       clearCart: async () => {
         set({ isLoading: true, error: null });
         try {
-          const response = await axiosInstance.delete(`/cart/clear/userId`);
+          // const response = await axiosInstance.delete(`/cart/clear/userId`);
+          // if (response.data.status) {
+          //   set({ cart: [], total: 0, isLoading: false });
+          // }
+          const isLoggedIn = !!Cookies.get("token"); // Check if user is logged in using cookies
 
-          if (response.data.status) {
+          if (isLoggedIn) {
+            const response = await axiosInstance.delete(`/cart/clear/userId`);
+
+            if (response.data.status) {
+              set({ cart: [], total: 0, isLoading: false });
+            }
+          } else {
+            // Clear local cart in cookies if not logged in
             set({ cart: [], total: 0, isLoading: false });
+            Cookies.remove("cart"); // Remove cart from cookies
           }
-        } catch (error: any) {
+        } catch (error) {
           set({
-            error: error.response?.data?.msg || "Failed to clear cart",
+            error: "Failed to clear cart",
             isLoading: false,
           });
+        }
+      },
+
+      // SYNC CART WITH SERVER
+      syncCartWithServer: async () => {
+        const isLoggedIn = !!Cookies.get("token");
+        if (isLoggedIn) {
+          const localCart: LocalCartItem[] = JSON.parse(
+            Cookies.get("cart") || "[]"
+          );
+          if (localCart.length > 0) {
+            // Sync local cart with server
+            await Promise.all(
+              localCart.map((item) => axiosInstance.post("/cart", item))
+            );
+            Cookies.remove("cart"); // Clear local cart after syncing
+            await get().fetchCart();
+          }
         }
       },
     }),

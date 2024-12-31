@@ -24,7 +24,7 @@ export default function Header() {
   const toggleCategoriesDropdown = (): void => {
     setIsCategoriesOpen(!isCategoriesOpen);
   };
-  console.log(setIsLoggedIn);
+  // console.log(setIsLoggedIn);
   // const handleLogin = () => {
   //   // Perform login logic here
   //   setIsLoggedIn(true); // Set to true on successful login

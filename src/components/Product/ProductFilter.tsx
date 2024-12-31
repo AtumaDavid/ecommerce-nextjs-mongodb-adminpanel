@@ -48,7 +48,7 @@ export default function ProductFilter() {
       selectedColors: colors,
     };
 
-    console.log("Applied Filters:", filters);
+    // console.log("Applied Filters:", filters);
     // You can add your filter logic here or pass the filters to a parent component
   };
 

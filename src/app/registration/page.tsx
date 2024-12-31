@@ -57,7 +57,7 @@ export default function Page() {
       axiosInstance
         .post("/register", values)
         .then((data) => {
-          console.log(data);
+          // console.log(data);
           // Redirect to login page
           if (data?.status) {
             showToast({
@@ -72,7 +72,7 @@ export default function Page() {
             type: "error",
             message: err.response?.data?.msg || "Registration failed.",
           });
-          console.log(err.response.data);
+          // console.log(err.response.data);
         });
       resetForm();
     } catch (error) {

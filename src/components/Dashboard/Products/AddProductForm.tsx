@@ -393,7 +393,7 @@ const ProductForm: React.FC<AddProductFormProps> = ({
         },
       });
 
-      console.log(response.data);
+      // console.log(response.data);
 
       // Always set as a single image
       setFormData((prev) => ({
@@ -453,26 +453,26 @@ const ProductForm: React.FC<AddProductFormProps> = ({
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    console.log("Form submission initiated."); // Debugging log
-    console.log("Product _id:", formData._id); // Add this line to debug
+    // console.log("Form submission initiated."); // Debugging log
+    // console.log("Product _id:", formData._id); // Add this line to debug
     setIsSubmitted(true); // Set the submitted state to true
 
     // Log full form data for debugging
-    console.log("Full Form Data:", formData);
+    // console.log("Full Form Data:", formData);
 
     // Validate the form
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
-      console.log("Validation errors found:", validationErrors); // Debugging log
+      // console.log("Validation errors found:", validationErrors); // Debugging log
       setErrors(validationErrors); // Set errors if validation fails
       return; // Stop the submission process
     }
 
     // Log the data being submitted
-    console.log("Submitting product data:", {
-      ...formData,
-      _id: initialData?._id, // Include the ID if available
-    });
+    // console.log("Submitting product data:", {
+    //   ...formData,
+    //   _id: initialData?._id, // Include the ID if available
+    // });
 
     // Prepare product data for submission
     const productData: ProductFormData = {
@@ -487,7 +487,7 @@ const ProductForm: React.FC<AddProductFormProps> = ({
     onSubmit(productData);
 
     // Optionally, you can reset the form or show a success message
-    console.log("Product data submitted:", productData);
+    // console.log("Product data submitted:", productData);
   };
 
   return (

@@ -33,7 +33,7 @@ export default function ChangePassword() {
     try {
       // Simulate API call to update password
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log("Form values:", values);
+      // console.log("Form values:", values);
       resetForm();
     } catch (error) {
       console.error("Submission error:", error);

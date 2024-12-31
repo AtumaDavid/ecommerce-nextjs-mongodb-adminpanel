@@ -6,6 +6,7 @@
     "FORMIK",
     "headlessui",
     "signin",
-    "Wishlisted"
+    "Wishlisted",
+    "zustand"
   ]
 }

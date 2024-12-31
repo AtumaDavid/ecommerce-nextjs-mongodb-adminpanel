@@ -94,7 +94,7 @@ export default function Page() {
       axiosInstance
         .post("/login", values)
         .then((data) => {
-          console.log(data);
+          // console.log(data);
           if (data?.status) {
             showToast({
               type: "success",
@@ -114,7 +114,7 @@ export default function Page() {
             type: "error",
             message: err.response?.data?.msg || "Error with login",
           });
-          console.log(err.response.data);
+          // console.log(err.response.data);
         });
     } catch (error) {
       console.error("Login error:", error);
@@ -125,7 +125,7 @@ export default function Page() {
   };
 
   const handleQuickLogin = (role: string) => {
-    console.log(`Quick login as ${role}`);
+    // console.log(`Quick login as ${role}`);
   };
 
   return (

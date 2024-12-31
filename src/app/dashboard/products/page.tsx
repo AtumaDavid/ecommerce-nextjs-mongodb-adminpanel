@@ -201,7 +201,7 @@ const DashboardProduct = () => {
         updatedProductData
       );
 
-      console.log("Product updated:", response.data);
+      // console.log("Product updated:", response.data);
 
       // Update the products state with the updated product
       setProducts((prevProducts) =>

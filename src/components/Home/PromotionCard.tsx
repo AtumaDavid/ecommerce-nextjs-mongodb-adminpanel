@@ -8,7 +8,7 @@ export default function PromotionCard() {
     { image: "/winter_exclusive_for_woman-cover.png", alt: "promotion2" },
     { image: "/winter_exclusive_for_kids-cover.png", alt: "promotion3" },
   ]);
-  console.log(setPromotions);
+  // console.log(setPromotions);
 
   return (
     <div className="xl:container px-2 xl:px-4 mx-auto my-16">
