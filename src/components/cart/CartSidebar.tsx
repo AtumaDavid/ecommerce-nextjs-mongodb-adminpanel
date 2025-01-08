@@ -3,6 +3,7 @@ import React, { useEffect } from "react";
 import { IoClose } from "react-icons/io5";
 import { Transition } from "@headlessui/react";
 import useCartStore, { CartItem } from "@/store/cartStore";
+import { MdDelete } from "react-icons/md";
 
 interface CartSidebarProps {
   isOpen: boolean;
@@ -212,7 +213,7 @@ export default function CartSidebar({ isOpen, setIsOpen }: CartSidebarProps) {
                         }
                         className="text-red-500 text-sm ml-2"
                       >
-                        Remove
+                        <MdDelete size={23} />
                       </button>
                     </div>
                   );
@@ -232,6 +233,12 @@ export default function CartSidebar({ isOpen, setIsOpen }: CartSidebarProps) {
               disabled={cart?.length === 0}
             >
               Proceed to checkout
+            </button>
+            <button
+              className="w-full bg-white border border-primary text-primary p-3 rounded-lg hover:bg-primary hover:text-white transition mt-5"
+              // disabled={cart?.length === 0}
+            >
+              Clear Cart (not working yet)
             </button>
           </div>
         </div>
