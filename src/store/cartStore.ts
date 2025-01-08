@@ -195,16 +195,9 @@ const useCartStore = create<CartState>()(
       updateCartItemQuantity: async (productId, quantity, variationId) => {
         set({ isLoading: true, error: null });
         try {
-          // const response = await axiosInstance.put(`/cart`, {
-          //   productId,
-          //   quantity,
-          //   variationId,
-          // });
-
-          // if (response.data.status) {
-          //   await get().fetchCart();
-          // }
           const isLoggedIn = !!Cookies.get("token");
+          // // Equivalent to:
+          // const isLoggedIn = Cookies.get("token") ? true : false;
 
           if (isLoggedIn) {
             const response = await axiosInstance.put("/cart", {
