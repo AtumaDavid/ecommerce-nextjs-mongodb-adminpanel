@@ -1,8 +1,4 @@
 "use client";
-// import Carousel from "@/components/Home/Carousel";
-// import CategoryCarousel from "@/components/Home/CategoryCarousel";
-// import PromotionCard from "@/components/Home/PromotionCard";
-// import ProductCard from "@/components/Product/ProductCard";
 import Carousel from "@/components/Home/Carousel";
 import CategoryCarousel from "@/components/Home/CategoryCarousel";
 import PromotionCard from "@/components/Home/PromotionCard";

@@ -71,6 +71,16 @@ const PaymentMethods: React.FC<PaymentMethodProps> = ({
       name: "Cryptocurrency",
       icon: <CreditCard className="w-6 h-6" />,
     },
+    {
+      id: "paystack",
+      name: "Paystack",
+      icon: <CreditCard className="w-6 h-6" />,
+    },
+    {
+      id: "flutterwave",
+      name: "Flutterwave",
+      icon: <CreditCard className="w-6 h-6" />,
+    },
   ];
 
   // Handle payment method selection
@@ -119,6 +129,22 @@ const PaymentMethods: React.FC<PaymentMethodProps> = ({
           <div className="mt-4">
             <button className="w-full bg-blue-500 text-white p-2 rounded-lg">
               Continue to PayPal
+            </button>
+          </div>
+        );
+      case "paystack":
+        return (
+          <div className="mt-4">
+            <button className="w-full bg-green-500 text-white p-2 rounded-lg">
+              Continue to Paystack
+            </button>
+          </div>
+        );
+      case "flutterwave":
+        return (
+          <div className="mt-4">
+            <button className="w-full bg-purple-500 text-white p-2 rounded-lg">
+              Continue to Flutterwave
             </button>
           </div>
         );
