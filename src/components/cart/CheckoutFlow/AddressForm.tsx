@@ -104,7 +104,7 @@ const AddressForm: React.FC<AddressFormProps> = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 p-4 sm:p-6">
       {/* Full Name */}
       <div>
         <label className="block mb-1">
@@ -144,9 +144,9 @@ const AddressForm: React.FC<AddressFormProps> = ({
         <label className="block mb-1">
           Phone <span className="text-red-500">*</span>
         </label>
-        <div className="flex">
+        <div className="flex ">
           <select
-            className="p-2 border rounded-l-lg w-24"
+            className="p-2 border rounded-l-lg w-24 sm:w-1/4"
             value={formData.country}
             onChange={(e) => updateFormField("country", e.target.value)}
           >
@@ -168,7 +168,7 @@ const AddressForm: React.FC<AddressFormProps> = ({
       </div>
 
       {/* Country, State, City Selects */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <label className="block mb-1">
             Country <span className="text-red-500">*</span>

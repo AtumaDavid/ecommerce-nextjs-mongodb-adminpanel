@@ -113,7 +113,7 @@ const PaymentMethods: React.FC<PaymentMethodProps> = ({
                   className="w-full p-2 border rounded-lg"
                 />
               </div>
-              <div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <label className="block mb-1">CVV</label>
                 <input
                   type="text"
@@ -156,7 +156,7 @@ const PaymentMethods: React.FC<PaymentMethodProps> = ({
   return (
     <div className="space-y-6">
       {/* Payment Method Grid */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {paymentMethods.map((method) => (
           <div
             key={method.id}
