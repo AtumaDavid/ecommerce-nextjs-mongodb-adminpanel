@@ -53,18 +53,18 @@ const CouponModal: React.FC<CouponModalProps> = ({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Coupon Code">
-      <div className="space-y-4">
+      <div className="space-y-4 p-4 sm:p-6">
         {/* Manual Coupon Input */}
-        <div className="flex">
+        <div className="flex flex-wrap justify-center sm:justify-start">
           <input
             type="text"
-            className="flex-grow p-2 border rounded-l-lg"
+            className="flex-grow p-2 border rounded-l-lg w-full sm:w-3/4"
             placeholder="Enter coupon code"
             value={couponCode}
             onChange={(e) => setCouponCode(e.target.value)}
           />
           <button
-            className="px-6 py-2 bg-blue-500 text-white rounded-r-lg"
+            className="px-6 py-2 bg-blue-500 text-white rounded-r-lg w-full sm:w-auto mt-2 sm:mt-0"
             onClick={handleManualCouponApply}
           >
             Apply
