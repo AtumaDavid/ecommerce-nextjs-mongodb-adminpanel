@@ -9,3 +9,6 @@
 - npm i --save-dev @types/js-cookie
 - npm i jwt-decode
 - npm install @headlessui/react
+- npm install react-phone-input-2
+- npm i country-state-city
+- npm install react-select
