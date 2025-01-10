@@ -1,5 +1,9 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
+import { Country, State, City } from "country-state-city";
+import Select from "react-select";
 
 // Define types for form data
 export interface AddressFormData {
@@ -19,6 +23,12 @@ interface AddressFormProps {
   onCancel: () => void;
   initialData?: Partial<AddressFormData>;
 }
+
+// Transform countries for react-select
+const countryOptions = Country.getAllCountries().map((country) => ({
+  value: country.name,
+  label: country.name,
+}));
 
 const AddressForm: React.FC<AddressFormProps> = ({
   onSubmit,
@@ -42,6 +52,30 @@ const AddressForm: React.FC<AddressFormProps> = ({
   const [errors, setErrors] = useState<
     Partial<Record<keyof AddressFormData, string>>
   >({});
+
+  const [selectedCountry, setSelectedCountry] = useState("ng");
+  const [selectedState, setSelectedState] = useState("");
+
+  // Countries Dropdown
+  const countries = Country.getAllCountries();
+
+  // Get States for Selected Country
+  const states = selectedCountry
+    ? State.getStatesOfCountry(selectedCountry)
+    : [];
+
+  // Get Cities for Selected State
+  const cities =
+    selectedCountry && selectedState
+      ? City.getCitiesOfState(selectedCountry, selectedState)
+      : [];
+
+  // Update form field with phone and country
+  const updatePhoneField = (phone: string, country: any) => {
+    updateFormField("phone", phone);
+    setSelectedCountry(country.countryCode);
+    updateFormField("country", country.countryCode.toUpperCase());
+  };
 
   // Validation function
   const validateForm = (): boolean => {
@@ -71,7 +105,6 @@ const AddressForm: React.FC<AddressFormProps> = ({
       newErrors.streetAddress = "Street Address is required";
     }
 
-    // Optional email validation
     if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = "Invalid email format";
     }
@@ -101,6 +134,32 @@ const AddressForm: React.FC<AddressFormProps> = ({
         [field]: undefined,
       }));
     }
+  };
+
+  // Handle Country Change
+  const handleCountryChange = (countryName: string) => {
+    updateFormField("country", countryName);
+
+    // Find the corresponding country code to set states
+    const selectedCountry = countries.find((c) => c.name === countryName);
+    setSelectedCountry(selectedCountry ? selectedCountry.isoCode : "");
+
+    // Reset dependent fields
+    updateFormField("state", "");
+    updateFormField("city", "");
+    setSelectedState("");
+  };
+
+  // Handle State Change
+  const handleStateChange = (stateName: string) => {
+    updateFormField("state", stateName);
+
+    // Find the corresponding state code
+    const selectedState = states.find((s) => s.name === stateName);
+    setSelectedState(selectedState ? selectedState.isoCode : "");
+
+    // Reset city
+    updateFormField("city", "");
   };
 
   return (
@@ -141,91 +200,130 @@ const AddressForm: React.FC<AddressFormProps> = ({
 
       {/* Phone */}
       <div>
-        <label className="block mb-1">
-          Phone <span className="text-red-500">*</span>
+        <label className="block mb-1 text-sm font-medium text-gray-700">
+          Phone Number <span className="text-red-500">*</span>
         </label>
-        <div className="flex ">
-          <select
-            className="p-2 border rounded-l-lg w-24 sm:w-1/4"
-            value={formData.country}
-            onChange={(e) => updateFormField("country", e.target.value)}
-          >
-            <option value="BD">BD +880</option>
-            <option value="US">US +1</option>
-          </select>
-          <input
-            type="tel"
-            className={`w-full p-2 border border-l-0 rounded-r-lg ${
-              errors.phone ? "border-red-500" : ""
-            }`}
+        <div className="relative">
+          <PhoneInput
+            country={selectedCountry}
             value={formData.phone}
-            onChange={(e) => updateFormField("phone", e.target.value)}
+            onChange={(phone, country) => updatePhoneField(phone, country)}
+            inputProps={{
+              required: true,
+              className: `
+          w-full 
+          p-2 
+          pl-12 
+          border 
+          rounded-lg 
+          focus:outline-none 
+          focus:ring-2 
+          focus:ring-blue-500 
+          ${errors.phone ? "border-red-500" : "border-gray-300"}
+        `,
+            }}
+            specialLabel=""
+            containerClass="w-full"
+            dropdownClass="custom-dropdown"
+            inputClass="!w-full !p-2 !pl-12"
+            buttonClass="!border-r-0 !rounded-l-lg"
+            searchClass="!text-sm"
+            disableSearchIcon={false}
+            enableSearch={true}
+            searchPlaceholder="Search country"
           />
+          {errors.phone && (
+            <p className="text-red-500 text-xs mt-1 absolute">{errors.phone}</p>
+          )}
         </div>
-        {errors.phone && (
-          <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
-        )}
       </div>
 
       {/* Country, State, City Selects */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div>
-          <label className="block mb-1">
-            Country <span className="text-red-500">*</span>
-          </label>
-          <select
-            className={`w-full p-2 border rounded-lg ${
-              errors.country ? "border-red-500" : ""
-            }`}
-            value={formData.country}
-            onChange={(e) => updateFormField("country", e.target.value)}
-          >
-            <option value="">Select Country</option>
-            <option value="BD">Bangladesh</option>
-            <option value="US">United States</option>
-          </select>
-          {errors.country && (
-            <p className="text-red-500 text-sm mt-1">{errors.country}</p>
-          )}
-        </div>
+      {/* Country Dropdown */}
+      <div>
+        <label className="block mb-1">
+          Country <span className="text-red-500">*</span>
+        </label>
+        <Select
+          options={countryOptions}
+          value={
+            formData.country
+              ? { value: formData.country, label: formData.country }
+              : null
+          }
+          onChange={(selectedOption) => {
+            const country = selectedOption as { value: string; label: string };
+            handleCountryChange(country.value);
+          }}
+          placeholder="Select Country"
+          className={`w-full ${errors.country ? "border-red-500" : ""}`}
+          classNamePrefix="react-select"
+          styles={{
+            control: (base) => ({
+              ...base,
+              borderColor: errors.country ? "red" : base.borderColor,
+            }),
+          }}
+          isSearchable={true}
+          noOptionsMessage={() => "No countries found"}
+        />
+        {errors.country && (
+          <p className="text-red-500 text-sm mt-1">{errors.country}</p>
+        )}
+      </div>
 
-        <div>
-          <label className="block mb-1">
-            State <span className="text-red-500">*</span>
-          </label>
-          <select
-            className={`w-full p-2 border rounded-lg ${
-              errors.state ? "border-red-500" : ""
-            }`}
-            value={formData.state}
-            onChange={(e) => updateFormField("state", e.target.value)}
-          >
-            <option value="">Select State</option>
-            <option value="DHK">Dhaka</option>
-          </select>
-          {errors.state && (
-            <p className="text-red-500 text-sm mt-1">{errors.state}</p>
-          )}
-        </div>
+      {/* State Dropdown */}
+      <div>
+        <label className="block mb-1">
+          State <span className="text-red-500">*</span>
+        </label>
+        <select
+          className={`w-full p-2 border rounded-lg ${
+            errors.state ? "border-red-500" : ""
+          }`}
+          value={formData.state}
+          onChange={(e) => handleStateChange(e.target.value)}
+          disabled={!selectedCountry}
+        >
+          <option value="">Select State</option>
+          {states
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .map((state) => (
+              <option key={state.isoCode} value={state.name}>
+                {state.name}
+              </option>
+            ))}
+        </select>
+        {errors.state && (
+          <p className="text-red-500 text-sm mt-1">{errors.state}</p>
+        )}
+      </div>
 
-        <div>
-          <label className="block mb-1">
-            City <span className="text-red-500">*</span>
-          </label>
-          <select
-            className={`w-full p-2 border rounded-lg ${
-              errors.city ? "border-red-500" : ""
-            }`}
-            value={formData.city}
-            onChange={(e) => updateFormField("city", e.target.value)}
-          >
-            <option value="">Select City</option>
-            <option value="DHK">Dhaka</option>
-          </select>
-          {errors.city && (
-            <p className="text-red-500 text-sm mt-1">{errors.city}</p>
-          )}
-        </div>
+      {/* City Dropdown */}
+      <div>
+        <label className="block mb-1">
+          City <span className="text-red-500">*</span>
+        </label>
+        <select
+          className={`w-full p-2 border rounded-lg ${
+            errors.city ? "border-red-500" : ""
+          }`}
+          value={formData.city}
+          onChange={(e) => updateFormField("city", e.target.value)}
+          disabled={!selectedState}
+        >
+          <option value="">Select City</option>
+          {cities
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .map((city) => (
+              <option key={city.name} value={city.name}>
+                {city.name}
+              </option>
+            ))}
+        </select>
+        {errors.city && (
+          <p className="text-red-500 text-sm mt-1">{errors.city}</p>
+        )}
       </div>
 
       {/* Street Address */}

@@ -77,6 +77,7 @@ export default function CheckoutFlow() {
             console.log("something went wrong");
           }
         });
+      setShowAddressModal(false);
     } else {
       // Optionally show an error message
       alert("Please fill in all required fields");
