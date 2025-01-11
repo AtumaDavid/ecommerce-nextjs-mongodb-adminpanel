@@ -1,16 +1,6 @@
-"use client";
 import React, { useState } from "react";
-import { Truck, MapPin, Store } from "lucide-react";
-
-// Define shipping method interface
-interface ShippingMethod {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  estimatedDelivery: string;
-  icon?: React.ReactNode;
-}
+import { Truck, MapPin, Store, Edit, Trash2, PlusCircle } from "lucide-react";
+import { AddressFormData } from "./AddressForm";
 
 // Define store location interface
 interface StoreLocation {
@@ -26,49 +16,40 @@ interface StoreLocation {
 interface ShippingMethodProps {
   onShippingSelect: (shippingMethod: string) => void;
   initialSelectedShipping?: string;
+  addresses: AddressFormData[];
+  selectedAddress: number | null;
+  setSelectedAddress: (index: number | null) => void;
+  setShowAddressModal: (show: boolean) => void;
+  setEditingAddress: (index: number | null) => void;
+  handleDeleteAddress: (index: number) => void;
+}
+
+// Props interface
+interface ShippingMethodProps {
+  onShippingSelect: (shippingMethod: string) => void;
+  // initialSelectedShipping?: string;
+  // addresses: Address[];
 }
 
 const ShippingMethods: React.FC<ShippingMethodProps> = ({
   onShippingSelect,
-  initialSelectedShipping,
+  // initialSelectedShipping,
+  addresses = [],
+  selectedAddress,
+  setSelectedAddress,
+  setShowAddressModal,
+  setEditingAddress,
+  handleDeleteAddress,
 }) => {
   // State for shipping mode and selections
   const [shippingMode, setShippingMode] = useState<"delivery" | "pickup">(
     "delivery"
   );
-  const [selectedShipping, setSelectedShipping] = useState<string>(
-    initialSelectedShipping || ""
-  );
+  // const [selectedShipping, setSelectedShipping] = useState<string>(
+  //   initialSelectedShipping || ""
+  // );
   const [selectedStoreLocation, setSelectedStoreLocation] =
     useState<string>("");
-
-  // Shipping methods
-  const shippingMethods: ShippingMethod[] = [
-    {
-      id: "standard",
-      name: "Standard Shipping",
-      description: "Delivery in 5-7 business days",
-      price: 5.99,
-      estimatedDelivery: "5-7 Days",
-      icon: <Truck className="w-6 h-6" />,
-    },
-    {
-      id: "express",
-      name: "Express Shipping",
-      description: "Delivery in 2-3 business days",
-      price: 12.99,
-      estimatedDelivery: "2-3 Days",
-      icon: <Truck className="w-6 h-6" />,
-    },
-    {
-      id: "overnight",
-      name: "Overnight Shipping",
-      description: "Next business day delivery",
-      price: 19.99,
-      estimatedDelivery: "1 Day",
-      icon: <Truck className="w-6 h-6" />,
-    },
-  ];
 
   // Store locations
   const storeLocations: StoreLocation[] = [
@@ -98,17 +79,70 @@ const ShippingMethods: React.FC<ShippingMethodProps> = ({
     },
   ];
 
-  // Handle shipping method selection
-  const handleShippingSelect = (methodId: string) => {
-    setSelectedShipping(methodId);
-    onShippingSelect(methodId);
-  };
-
   // Handle store location selection
   const handleStoreLocationSelect = (locationId: string) => {
     setSelectedStoreLocation(locationId);
     onShippingSelect(locationId);
   };
+
+  const AddressSelection = () => (
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+        <h2 className="text-xl font-semibold">Your Addresses</h2>
+        <button
+          onClick={() => setShowAddressModal(true)}
+          className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors w-full sm:w-auto"
+        >
+          <PlusCircle className="mr-2 w-5 h-5" />
+          Add New Address
+        </button>
+      </div>
+
+      {addresses.map((address, index) => (
+        <div
+          key={index}
+          className={`
+            border p-4 rounded-lg cursor-pointer 
+            ${
+              selectedAddress === index
+                ? "border-blue-500 bg-blue-50"
+                : "border-gray-200 hover:border-blue-300"
+            }
+          `}
+          onClick={() => setSelectedAddress(index)}
+        >
+          <div className="flex justify-between items-start">
+            <div>
+              <h3 className="font-semibold">{address.fullName}</h3>
+              <p>{address.streetAddress}</p>
+              <p>{`${address.city}, ${address.state}, ${address.country}`}</p>
+              <p>{address.phone}</p>
+            </div>
+            <div className="flex space-x-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setEditingAddress(index);
+                }}
+                className="text-blue-500 hover:text-blue-700"
+              >
+                <Edit className="w-5 h-5" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteAddress(index);
+                }}
+                className="text-red-500 hover:text-red-700"
+              >
+                <Trash2 className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -136,36 +170,8 @@ const ShippingMethods: React.FC<ShippingMethodProps> = ({
         </button>
       </div>
 
-      {/* Shipping Methods or Pickup Locations */}
-      {shippingMode === "delivery" ? (
-        <div className="grid grid-cols-3 gap-4">
-          {shippingMethods.map((method) => (
-            <div
-              key={method.id}
-              className={`p-4 border rounded-lg cursor-pointer transition-all duration-300 ${
-                selectedShipping === method.id
-                  ? "border-red-500 bg-red-50 shadow-md"
-                  : "border-gray-200 hover:border-gray-300"
-              }`}
-              onClick={() => handleShippingSelect(method.id)}
-            >
-              <div className="flex items-center justify-center h-12 mb-2">
-                {method.icon || <Truck className="w-6 h-6" />}
-              </div>
-              <div className="text-center">
-                <h3 className="font-semibold">{method.name}</h3>
-                <p className="text-sm text-gray-600">{method.description}</p>
-                <p className="text-sm font-bold mt-1">
-                  ${method.price.toFixed(2)}
-                </p>
-                <p className="text-xs text-blue-600">
-                  Estimated: {method.estimatedDelivery}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
+      {/* Show Pickup Locations */}
+      {shippingMode === "pickup" && (
         <div className="space-y-4">
           {storeLocations.map((location) => (
             <div
@@ -198,13 +204,8 @@ const ShippingMethods: React.FC<ShippingMethodProps> = ({
         </div>
       )}
 
-      {/* Additional Shipping Information */}
-      <div className="text-sm text-gray-600 mt-4">
-        <p>
-          * Shipping times may vary based on location and current conditions
-        </p>
-        <p>* Pickup availability subject to store hours and inventory</p>
-      </div>
+      {/* Address Selection Component */}
+      {shippingMode === "delivery" && <AddressSelection />}
     </div>
   );
 };

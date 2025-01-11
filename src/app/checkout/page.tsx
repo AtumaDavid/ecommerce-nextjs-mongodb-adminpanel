@@ -8,10 +8,10 @@ import AddressForm, {
   AddressFormData,
 } from "@/components/cart/CheckoutFlow/AddressForm";
 import PaymentMethods from "@/components/cart/CheckoutFlow/Payment";
-// import ShippingMethods from "@/components/cart/CheckoutFlow/Shipping";
+import ShippingMethods from "@/components/cart/CheckoutFlow/Shipping";
 import Cart from "@/components/cart/CheckoutFlow/Cart";
 import useCartStore, { CartItem } from "@/store/cartStore";
-import GetOrderSummary from "@/components/cart/CheckoutFlow/GetOrderSummary";
+// import GetOrderSummary from "@/components/cart/CheckoutFlow/GetOrderSummary";
 import axiosInstance from "@/lib/axiosInstance";
 
 // Main component
@@ -24,31 +24,31 @@ export default function CheckoutFlow() {
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [showCouponModal, setShowCouponModal] = useState(false);
   const [editingAddress, setEditingAddress] = useState<number | null>(null);
-  // const [selectedShipping, setSelectedShipping] = useState("");
+  const [selectedShipping, setSelectedShipping] = useState("");
   const [selectedAddress, setSelectedAddress] = useState<number | null>(null);
   // const [useShippingAsBilling, setUseShippingAsBilling] = useState(true);
-  const [addresses, setAddresses] = useState<AddressFormData[]>([
-    {
-      fullName: "Adebayo Okonkwo",
-      phone: "+234 805 123 4567",
-      email: "customer@example.com",
-      city: "Lagos",
-      state: "Lagos",
-      country: "Nigeria",
-      streetAddress: "No. 12, Admiralty Way, Lekki Phase 1",
-      zipCode: "100001",
-    },
-    {
-      fullName: "Chukwudi Nnamdi",
-      phone: "+234 802 987 6543",
-      email: "customer@example.com",
-      city: "Abuja",
-      state: "Federal Capital Territory",
-      country: "Nigeria",
-      streetAddress: "Plot 1452, Cadastral Zone A3, Gwarinpa",
-      zipCode: "900108",
-    },
-  ]);
+  const [addresses, setAddresses] = useState<AddressFormData[]>([]);
+
+  // FETCH ADDRESS
+  useEffect(() => {
+    const fetchAddresses = async () => {
+      try {
+        const response = await axiosInstance.get("/user");
+        if (response?.data?.status) {
+          setAddresses(response.data.user.shippingAddress);
+        } else {
+          // Handle case where fetch was not successful
+          console.warn("Failed to fetch addresses", response?.data?.msg);
+          setAddresses([]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch addresses", error);
+        setAddresses([]);
+      }
+    };
+
+    fetchAddresses();
+  }, []);
 
   // PAYMENT
   const handlePaymentSelect = (method: string) => {
@@ -57,50 +57,90 @@ export default function CheckoutFlow() {
   };
 
   // // SHIPPING
-  // const handleShippingSelect = (method: string) => {
-  //   setSelectedShipping(method);
-  //   // Additional logic for shipping processing
-  // };
+  const handleShippingSelect = (method: string) => {
+    setSelectedShipping(method);
+    // Additional logic for shipping processing
+  };
 
   // Add new address
-  const handleAddAddress = (formData: AddressFormData) => {
+  const handleAddAddress = async (formData: AddressFormData) => {
+    if (addresses.length >= 3) {
+      alert("You can only add up to 3 addresses.");
+      return;
+    }
+
     // Validate the form data before adding
     if (formData.fullName && formData.phone && formData.streetAddress) {
-      // setAddresses([...addresses, formData]);
-      // setShowAddressModal(false);
-      axiosInstance
-        .put("/users", { shippingAddress: formData })
-        .then((data) => {
-          if (data?.status) {
-            console.log(data?.status);
-          } else {
-            console.log("something went wrong");
-          }
+      try {
+        const response = await axiosInstance.post("/user/shipping-address", {
+          shippingAddress: formData,
         });
-      setShowAddressModal(false);
+
+        if (response?.data?.status) {
+          // Update local state with the new addresses from the response
+          setAddresses(response.data.user.shippingAddress);
+          setShowAddressModal(false);
+        } else {
+          alert(response?.data?.msg || "Failed to add address");
+        }
+      } catch (error) {
+        console.error("Error adding address:", error);
+        alert("An error occurred while adding the address. Please try again.");
+      }
     } else {
-      // Optionally show an error message
       alert("Please fill in all required fields");
     }
   };
 
-  const handleEditAddress = (formData: AddressFormData) => {
+  // Edit existing address
+  const handleEditAddress = async (formData: AddressFormData) => {
     if (editingAddress !== null) {
-      const newAddresses = [...addresses];
-      newAddresses[editingAddress] = formData;
-      setAddresses(newAddresses);
-      setEditingAddress(null);
+      try {
+        const response = await axiosInstance.put(
+          `/user/shipping-address/${editingAddress}`,
+          { shippingAddress: formData }
+        );
+
+        if (response?.data?.status) {
+          // Update local state with the new addresses from the response
+          setAddresses(response.data.user.shippingAddress);
+          setEditingAddress(null);
+        } else {
+          console.error("Failed to update address:", response?.data?.msg);
+          alert("Failed to update address. Please try again.");
+        }
+      } catch (error) {
+        console.error("Error updating address:", error);
+        alert(
+          "An error occurred while updating the address. Please try again."
+        );
+      }
     }
   };
 
-  const handleDeleteAddress = (indexToRemove: number) => {
+  // DELETE ADDRESS
+  const handleDeleteAddress = async (indexToRemove: number) => {
     const confirmDelete = window.confirm(
       "Are you sure you want to delete this address?"
     );
     if (confirmDelete) {
-      setAddresses(addresses.filter((_, index) => index !== indexToRemove));
-      if (selectedAddress === indexToRemove) {
-        setSelectedAddress(null);
+      try {
+        const response = await axiosInstance.delete(
+          `/user/shipping-address/${indexToRemove}`
+        );
+        if (response?.data?.status) {
+          setAddresses(response.data.user.shippingAddress);
+          if (selectedAddress === indexToRemove) {
+            setSelectedAddress(null);
+          }
+        } else {
+          alert("Failed to delete shipping address. Please try again.");
+        }
+      } catch (error) {
+        console.error("Error deleting shipping address:", error);
+        alert(
+          "An error occurred while deleting the shipping address. Please try again."
+        );
       }
     }
   };
@@ -175,66 +215,6 @@ export default function CheckoutFlow() {
   //     </div>
   //   );
   // };
-
-  // Address Selection Component
-  const AddressSelection = () => (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-        <h2 className="text-xl font-semibold">Your Addresses</h2>
-        <button
-          onClick={() => setShowAddressModal(true)}
-          className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors w-full sm:w-auto"
-        >
-          <PlusCircle className="mr-2 w-5 h-5" />
-          Add New Address
-        </button>
-      </div>
-
-      {addresses.map((address, index) => (
-        <div
-          key={index}
-          className={`
-            border p-4 rounded-lg cursor-pointer 
-            ${
-              selectedAddress === index
-                ? "border-blue-500 bg-blue-50"
-                : "border-gray-200 hover:border-blue-300"
-            }
-          `}
-          onClick={() => setSelectedAddress(index)}
-        >
-          <div className="flex justify-between items-start">
-            <div>
-              <h3 className="font-semibold">{address.fullName}</h3>
-              <p>{address.streetAddress}</p>
-              <p>{`${address.city}, ${address.state}, ${address.country}`}</p>
-              <p>{address.phone}</p>
-            </div>
-            <div className="flex space-x-2">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setEditingAddress(index);
-                }}
-                className="text-blue-500 hover:text-blue-700"
-              >
-                <Edit className="w-5 h-5" />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeleteAddress(index);
-                }}
-                className="text-red-500 hover:text-red-700"
-              >
-                <Trash2 className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
 
   const handleIncreaseQuantity = async (item: CartItem) => {
     try {
@@ -369,11 +349,16 @@ export default function CheckoutFlow() {
             )}
             {step === 2 && (
               <>
-                <AddressSelection />
-                {/* <ShippingMethods
+                <ShippingMethods
                   onShippingSelect={handleShippingSelect}
                   initialSelectedShipping={selectedShipping}
-                /> */}
+                  addresses={addresses}
+                  selectedAddress={selectedAddress}
+                  setSelectedAddress={setSelectedAddress}
+                  setShowAddressModal={setShowAddressModal}
+                  setEditingAddress={setEditingAddress}
+                  handleDeleteAddress={handleDeleteAddress}
+                />
               </>
             )}
             {step === 3 && (

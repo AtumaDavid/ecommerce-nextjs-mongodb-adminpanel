@@ -7,9 +7,10 @@ import Select from "react-select";
 
 // Define types for form data
 export interface AddressFormData {
+  id?: string; // Make ID optional
   fullName: string;
   email: string;
-  phone: string;
+  phone: number | null;
   country: string;
   state: string;
   city: string;
@@ -37,15 +38,15 @@ const AddressForm: React.FC<AddressFormProps> = ({
 }) => {
   // State for form data with default values and initial data
   const [formData, setFormData] = useState<AddressFormData>({
-    fullName: "",
-    email: "",
-    phone: "",
-    country: "",
-    state: "",
-    city: "",
-    zipCode: "",
-    streetAddress: "",
-    ...initialData,
+    id: initialData.id,
+    fullName: initialData.fullName || "",
+    email: initialData.email || "",
+    phone: initialData.phone || null,
+    country: initialData.country || "",
+    state: initialData.state || "",
+    city: initialData.city || "",
+    zipCode: initialData.zipCode || "",
+    streetAddress: initialData.streetAddress || "",
   });
 
   // State for form validation
@@ -85,9 +86,9 @@ const AddressForm: React.FC<AddressFormProps> = ({
       newErrors.fullName = "Full Name is required";
     }
 
-    if (!formData.phone.trim()) {
-      newErrors.phone = "Phone number is required";
-    }
+    // if (!formData.phone?.trim()) {
+    //   newErrors.phone = "Phone number is required";
+    // }
 
     if (!formData.country) {
       newErrors.country = "Country is required";
@@ -206,7 +207,7 @@ const AddressForm: React.FC<AddressFormProps> = ({
         <div className="relative">
           <PhoneInput
             country={selectedCountry}
-            value={formData.phone}
+            value={formData.phone?.toString()}
             onChange={(phone, country) => updatePhoneField(phone, country)}
             inputProps={{
               required: true,

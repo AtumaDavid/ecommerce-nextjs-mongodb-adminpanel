@@ -2,7 +2,6 @@ import axiosInstance from "@/lib/axiosInstance";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import Cookies from "js-cookie";
-import { error } from "console";
 
 // Cart Item Interface
 export interface CartItem {
