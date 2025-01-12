@@ -13,12 +13,18 @@ import Cart from "@/components/cart/CheckoutFlow/Cart";
 import useCartStore, { CartItem } from "@/store/cartStore";
 // import GetOrderSummary from "@/components/cart/CheckoutFlow/GetOrderSummary";
 import axiosInstance from "@/lib/axiosInstance";
+import { useToast } from "@/context/ToastContext";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 // Main component
 export default function CheckoutFlow() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const { showToast } = useToast();
   const { cart, total, fetchCart, updateCartItemQuantity, removeFromCart } =
     useCartStore();
-  const [step, setStep] = useState(1);
+  // const [step, setStep] = useState(1);
   // const [selectedAddress, setSelectedAddress] = useState(0);
   const [selectedPayment, setSelectedPayment] = useState("");
   const [showAddressModal, setShowAddressModal] = useState(false);
@@ -28,6 +34,41 @@ export default function CheckoutFlow() {
   const [selectedAddress, setSelectedAddress] = useState<number | null>(null);
   // const [useShippingAsBilling, setUseShippingAsBilling] = useState(true);
   const [addresses, setAddresses] = useState<AddressFormData[]>([]);
+
+  // Initialize step state from URL
+  const [step, setStep] = useState(1);
+
+  // Effect to sync URL with step state
+  useEffect(() => {
+    const stepFromUrl = searchParams.get("step");
+    const newStep = stepFromUrl ? parseInt(stepFromUrl, 10) : 1;
+
+    if (newStep >= 1 && newStep <= 3) {
+      setStep(newStep);
+    }
+  }, [searchParams]);
+
+  //  handleStepChange to update URL
+  const handleStepChange = (newStep: number) => {
+    if (newStep >= 1 && newStep <= 3) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("step", newStep.toString());
+      router.push(`${pathname}?${params.toString()}`);
+      setStep(newStep);
+    }
+  };
+
+  // Handle back navigation
+  const handleBack = () => {
+    const prevStep = Math.max(1, step - 1);
+    handleStepChange(prevStep);
+  };
+
+  // Handle forward navigation
+  const handleNext = () => {
+    const nextStep = Math.min(3, step + 1);
+    handleStepChange(nextStep);
+  };
 
   // FETCH ADDRESS
   useEffect(() => {
@@ -39,6 +80,10 @@ export default function CheckoutFlow() {
         } else {
           // Handle case where fetch was not successful
           console.warn("Failed to fetch addresses", response?.data?.msg);
+          showToast({
+            type: "error",
+            message: "failed to fetch address",
+          });
           setAddresses([]);
         }
       } catch (error) {
@@ -79,16 +124,33 @@ export default function CheckoutFlow() {
         if (response?.data?.status) {
           // Update local state with the new addresses from the response
           setAddresses(response.data.user.shippingAddress);
+          showToast({
+            type: "success",
+            message: "Address added successfully",
+          });
           setShowAddressModal(false);
         } else {
-          alert(response?.data?.msg || "Failed to add address");
+          // alert(response?.data?.msg || "Failed to add address");
+          showToast({
+            type: "error",
+            message: "Failed to add address",
+          });
         }
       } catch (error) {
         console.error("Error adding address:", error);
-        alert("An error occurred while adding the address. Please try again.");
+        // alert("An error occurred while adding the address. Please try again.");
+        showToast({
+          type: "error",
+          message:
+            "An error occurred while adding the address. Please try again.",
+        });
       }
     } else {
-      alert("Please fill in all required fields");
+      // alert("Please fill in all required fields");
+      showToast({
+        type: "error",
+        message: "Please fill in all required fields",
+      });
     }
   };
 
@@ -104,16 +166,29 @@ export default function CheckoutFlow() {
         if (response?.data?.status) {
           // Update local state with the new addresses from the response
           setAddresses(response.data.user.shippingAddress);
+          showToast({
+            type: "success",
+            message: "Address updated successfully",
+          });
           setEditingAddress(null);
         } else {
           console.error("Failed to update address:", response?.data?.msg);
-          alert("Failed to update address. Please try again.");
+          // alert("Failed to update address. Please try again.");
+          showToast({
+            type: "error",
+            message: "Failed to update address. Please try again.",
+          });
         }
       } catch (error) {
         console.error("Error updating address:", error);
-        alert(
-          "An error occurred while updating the address. Please try again."
-        );
+        // alert(
+        //   "An error occurred while updating the address. Please try again."
+        // );
+        showToast({
+          type: "error",
+          message:
+            "An error occurred while updating the address. Please try again.",
+        });
       }
     }
   };
@@ -134,13 +209,22 @@ export default function CheckoutFlow() {
             setSelectedAddress(null);
           }
         } else {
-          alert("Failed to delete shipping address. Please try again.");
+          // alert("Failed to delete shipping address. Please try again.");
+          showToast({
+            type: "error",
+            message: "Failed to delete shipping address. Please try again.",
+          });
         }
       } catch (error) {
         console.error("Error deleting shipping address:", error);
-        alert(
-          "An error occurred while deleting the shipping address. Please try again."
-        );
+        // alert(
+        //   "An error occurred while deleting the shipping address. Please try again."
+        // );
+        showToast({
+          type: "error",
+          message:
+            "An error occurred while deleting the shipping address. Please try again.",
+        });
       }
     }
   };
@@ -265,7 +349,8 @@ export default function CheckoutFlow() {
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center mb-8">
           <button
-            onClick={() => setStep(Math.max(1, step - 1))}
+            // onClick={() => setStep(Math.max(1, step - 1))}
+            onClick={handleBack}
             className="text-gray-500 hover:text-gray-700"
           >
             <ChevronLeft className="w-6 h-6" />
@@ -370,14 +455,16 @@ export default function CheckoutFlow() {
 
             <div className="mt-8 flex flex-col sm:flex-row justify-between gap-4">
               <button
-                onClick={() => setStep(Math.max(1, step - 1))}
+                // onClick={() => setStep(Math.max(1, step - 1))}
+                onClick={handleBack}
                 className="px-4 sm:px-6 py-2 sm:py-3 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors w-full sm:w-auto"
               >
                 Back to {step === 2 ? "Cart" : "Checkout"}
               </button>
               {step < 3 ? (
                 <button
-                  onClick={() => setStep(Math.min(3, step + 1))}
+                  // onClick={() => setStep(Math.min(3, step + 1))}
+                  onClick={handleNext}
                   className="px-4 sm:px-6 py-2 sm:py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors w-full sm:w-auto"
                 >
                   {step === 1 ? "Process to Checkout" : "Save and Pay"}

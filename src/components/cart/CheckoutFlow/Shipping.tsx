@@ -88,7 +88,7 @@ const ShippingMethods: React.FC<ShippingMethodProps> = ({
   const AddressSelection = () => (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-        <h2 className="text-xl font-semibold">Your Addresses</h2>
+        <h2 className="text-xl font-semibold">Your Shipping Address Address</h2>
         <button
           onClick={() => setShowAddressModal(true)}
           className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors w-full sm:w-auto"
@@ -98,10 +98,18 @@ const ShippingMethods: React.FC<ShippingMethodProps> = ({
         </button>
       </div>
 
-      {addresses.map((address, index) => (
-        <div
-          key={index}
-          className={`
+      {addresses.length === 0 ? (
+        <div className="text-center p-4 bg-gray-100 rounded-lg">
+          <p className="text-gray-600">No addresses available</p>
+          <p className="text-sm text-gray-500 mt-2">
+            Click "Add New Address" to get started
+          </p>
+        </div>
+      ) : (
+        addresses.map((address, index) => (
+          <div
+            key={index}
+            className={`
             border p-4 rounded-lg cursor-pointer 
             ${
               selectedAddress === index
@@ -109,38 +117,39 @@ const ShippingMethods: React.FC<ShippingMethodProps> = ({
                 : "border-gray-200 hover:border-blue-300"
             }
           `}
-          onClick={() => setSelectedAddress(index)}
-        >
-          <div className="flex justify-between items-start">
-            <div>
-              <h3 className="font-semibold">{address.fullName}</h3>
-              <p>{address.streetAddress}</p>
-              <p>{`${address.city}, ${address.state}, ${address.country}`}</p>
-              <p>{address.phone}</p>
-            </div>
-            <div className="flex space-x-2">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setEditingAddress(index);
-                }}
-                className="text-blue-500 hover:text-blue-700"
-              >
-                <Edit className="w-5 h-5" />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeleteAddress(index);
-                }}
-                className="text-red-500 hover:text-red-700"
-              >
-                <Trash2 className="w-5 h-5" />
-              </button>
+            onClick={() => setSelectedAddress(index)}
+          >
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="font-semibold">{address.fullName}</h3>
+                <p>{address.streetAddress}</p>
+                <p>{`${address.city}, ${address.state}, ${address.country}`}</p>
+                <p>{address.phone}</p>
+              </div>
+              <div className="flex space-x-2">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEditingAddress(index);
+                  }}
+                  className="text-blue-500 hover:text-blue-700"
+                >
+                  <Edit className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteAddress(index);
+                  }}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        ))
+      )}
     </div>
   );
 
